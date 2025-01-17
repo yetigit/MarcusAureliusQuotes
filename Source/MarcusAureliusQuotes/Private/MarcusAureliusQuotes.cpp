@@ -22,19 +22,32 @@ void FMarcusAureliusQuotesModule::ShutdownModule()
 
 void FMarcusAureliusQuotesModule::FetchQuotes()
 {
-  unsigned NumberOfQuotes = 99;
+  int NumberOfQuotes = 99;
   FString Url = {"https://stoic-quotes.com/api/quotes?num="};
-  Url += NumberOfQuotes;
+  Url += FString::FromInt(NumberOfQuotes);
 
   TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request
   = FHttpModule::Get().CreateRequest();
   Request->SetVerb("GET");
   Request->SetURL(Url);
 
+  // using FHttpRequestCompleteDelegate = TTSDelegate<void(FHttpRequestPtr
+  // /*Request*/, FHttpResponsePtr /*Response*/, bool
+  // /*bProcessedSuccessfully*/)>;
+  
+  Request->OnProcessRequestComplete().BindRaw(
+    this, &FMarcusAureliusQuotesModule::OnResponseReceived);
+  Request->ProcessRequest();
+}
 
-  TFunction<void(const TSharedPtr<FJsonObject>&)> OnSuccess = 
-    [this](const TSharedPtr<FJsonObject>& Response){
 
+void FMarcusAureliusQuotesModule::OnResponseReceived(
+    FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+
+  auto OnError = [](const FString &InError) {
+    UE_LOG(LogTemp, Error, TEXT("Error: %s"), *InError);
+  };
+  auto OnSuccess = [this](const TSharedPtr<FJsonObject> &Response) {
     // TODO: this is a list of dictionnaries, we need to loop
     FString QuoteText;
     FString QuoteAuthor;
@@ -47,49 +60,27 @@ void FMarcusAureliusQuotesModule::FetchQuotes()
       QuoteObject.author = QuoteAuthor;
     }
     Quotes.Add(QuoteObject);
-
   };
-  TFunction<void(const FString&)> OnError =
-    [](const FString& InError){ UE_LOG(LogTemp, Error, TEXT("Error: %s"), *InError); };
 
-  // TODO: does not match argument list
-  // using FHttpRequestCompleteDelegate = TTSDelegate<void(FHttpRequestPtr
-  // /*Request*/, FHttpResponsePtr /*Response*/, bool
-  // /*bProcessedSuccessfully*/)>;
-  Request->OnProcessRequestComplete().BindRaw(
-    this, &FMarcusAureliusQuotesModule::OnResponseReceived, 
-    OnSuccess, OnError);
-  Request->ProcessRequest();
-}
+  if (!Response.IsValid() || !bWasSuccessful) {
+    OnError(TEXT("Request failed"));
+    return;
+  }
 
+  if (Response->GetResponseCode() < 200 || Response->GetResponseCode() > 299) {
+    OnError(
+        FString::Printf(TEXT("HTTP Error: %d"), Response->GetResponseCode()));
+    return;
+  }
+  TSharedPtr<FJsonObject> JsonObject;
+  TSharedRef<TJsonReader<>> Reader =
+      TJsonReaderFactory<>::Create(Response->GetContentAsString());
 
-void FMarcusAureliusQuotesModule::OnResponseReceived(
-    FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful,
-    const TFunction<void(const TSharedPtr<FJsonObject> &)> &OnSuccess,
-    const TFunction<void(const FString &)> &OnError){
-
-    if (!Response.IsValid() || !bWasSuccessful)
-    {
-        OnError(TEXT("Request failed"));
-        return;
-    }
-
-    if (Response->GetResponseCode() < 200 || 
-    Response->GetResponseCode() > 299)
-    {
-        OnError(FString::Printf(TEXT("HTTP Error: %d"), 
-                                Response->GetResponseCode()));
-        return;
-    }
-    TSharedPtr<FJsonObject> JsonObject;
-    TSharedRef<TJsonReader<>> Reader =
-        TJsonReaderFactory<>::Create(Response->GetContentAsString());
-
-    if (FJsonSerializer::Deserialize(Reader, JsonObject)) {
-      OnSuccess(JsonObject);
-    } else {
-      OnError(TEXT("Failed to parse JSON response"));
-    }
+  if (FJsonSerializer::Deserialize(Reader, JsonObject)) {
+    OnSuccess(JsonObject);
+  } else {
+    OnError(TEXT("Failed to parse JSON response"));
+  }
 }
 
 #undef LOCTEXT_NAMESPACE

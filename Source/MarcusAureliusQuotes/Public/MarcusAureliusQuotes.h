@@ -21,9 +21,9 @@ public:
   void FetchQuotes();
 
   void OnResponseReceived(
-      FHttpRequestPtr, FHttpResponsePtr, bool bWasSuccessful,
-      const TFunction<void(const TSharedPtr<FJsonObject> &)> &OnSuccess,
-      const TFunction<void(const FString &)> &OnError);
+      FHttpRequestPtr, FHttpResponsePtr, bool bWasSuccessful);
+      
+      
 
 public: 
   TArray<MAQuote> Quotes;
