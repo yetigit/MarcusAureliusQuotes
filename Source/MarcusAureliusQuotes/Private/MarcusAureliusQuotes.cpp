@@ -12,6 +12,8 @@
 void FMarcusAureliusQuotesModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+
+  FHttpModule::Get().SetHttpTimeout(30.0f);
 }
 
 void FMarcusAureliusQuotesModule::ShutdownModule()
@@ -40,26 +42,30 @@ void FMarcusAureliusQuotesModule::FetchQuotes()
   Request->ProcessRequest();
 }
 
-
-void FMarcusAureliusQuotesModule::OnResponseReceived(
-    FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful) {
+void FMarcusAureliusQuotesModule::OnResponseReceived(FHttpRequestPtr Request,
+                                                     FHttpResponsePtr Response,
+                                                     bool bWasSuccessful) {
 
   auto OnError = [](const FString &InError) {
     UE_LOG(LogTemp, Error, TEXT("Error: %s"), *InError);
   };
-  auto OnSuccess = [this](const TSharedPtr<FJsonObject> &Response) {
-    // TODO: this is a list of dictionnaries, we need to loop
-    FString QuoteText;
-    FString QuoteAuthor;
-    MAQuote QuoteObject;
-    if (Response->TryGetStringField("text", QuoteText)) {
-      QuoteObject.quote = QuoteText;
-    }
 
-    if (Response->TryGetStringField("author", QuoteAuthor)) {
-      QuoteObject.author = QuoteAuthor;
+  auto OnSuccess = [this](const TArray<TSharedPtr<FJsonValue>> &JsonArray) {
+    for (const auto &JsonVal : JsonArray) {
+      auto &CurrentDict = JsonVal->AsObject();
+
+      FString QuoteText;
+      FString QuoteAuthor;
+      MAQuote QuoteObject;
+
+      if (CurrentDict->TryGetStringField("text", QuoteText) &&
+          CurrentDict->TryGetStringField("author", QuoteAuthor)) {
+        QuoteObject.quote = QuoteText;
+        QuoteObject.author = QuoteAuthor;
+        Quotes.Add(QuoteObject);
+      }
+
     }
-    Quotes.Add(QuoteObject);
   };
 
   if (!Response.IsValid() || !bWasSuccessful) {
@@ -72,12 +78,12 @@ void FMarcusAureliusQuotesModule::OnResponseReceived(
         FString::Printf(TEXT("HTTP Error: %d"), Response->GetResponseCode()));
     return;
   }
-  TSharedPtr<FJsonObject> JsonObject;
+  TArray<TSharedPtr<FJsonValue>> JsonArray;
   TSharedRef<TJsonReader<>> Reader =
       TJsonReaderFactory<>::Create(Response->GetContentAsString());
 
-  if (FJsonSerializer::Deserialize(Reader, JsonObject)) {
-    OnSuccess(JsonObject);
+  if (FJsonSerializer::Deserialize(Reader, JsonArray)) {
+    OnSuccess(JsonArray);
   } else {
     OnError(TEXT("Failed to parse JSON response"));
   }

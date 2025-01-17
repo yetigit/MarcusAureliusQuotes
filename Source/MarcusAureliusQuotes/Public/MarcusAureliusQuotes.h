@@ -8,6 +8,7 @@
 
 #include "Http.h"
 #include "Json.h"
+#include "Dom/JsonValue.h"
 #include "Dom/JsonObject.h"
 
 class FMarcusAureliusQuotesModule : public IModuleInterface
