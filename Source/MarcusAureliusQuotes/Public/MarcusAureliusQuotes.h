@@ -19,13 +19,19 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
-  void FetchQuotes();
+  bool FetchQuotes();
 
   void OnResponseReceived(
       FHttpRequestPtr, FHttpResponsePtr, bool bWasSuccessful);
       
-      
+  bool Tick(float);
+
+  void PrintAllQuotes(int Num, bool bFromBottom);
+  void DisplayQuote();
+  void QuotesReset();
 
 public: 
+  FTSTicker::FDelegateHandle TickerHandle;
   TArray<MAQuote> Quotes;
+  bool bQuoteFetched_;
 };
