@@ -11,7 +11,7 @@ void MAQuoteWidget::Construct(const FArguments& InArgs)
     +SVerticalBox::Slot()
     .VAlign(VAlign_Center)
     .HAlign(HAlign_Fill)
-    .Padding(FMargin(10, 30, 10, 5))
+    .Padding(FMargin(10, 5, 10, 20))
     [
       SAssignNew(QuoteWidget, STextBlock)
       .Text(FText::FromString(TEXT(
@@ -27,7 +27,7 @@ void MAQuoteWidget::Construct(const FArguments& InArgs)
     .AutoHeight()
     .VAlign(VAlign_Top)
     .HAlign(HAlign_Center)
-    .Padding(FMargin(0, 0, 0, 40))
+    .Padding(FMargin(0, 0, 0, 10))
     [
       SAssignNew(AuthorWidget, STextBlock)
       .Text(FText::FromString(TEXT(
@@ -39,6 +39,20 @@ void MAQuoteWidget::Construct(const FArguments& InArgs)
     ]
 
   ];
+}
+FVector2D MAQuoteWidget::GetContentSize() const
+{
+  FVector2D wh(300, 300);
+  FVector2D Margin(30, 80);
+  if(QuoteWidget.IsValid() && AuthorWidget.IsValid())
+  {
+    FVector2D QuoteWSize = QuoteWidget->GetDesiredSize();
+    FVector2D AuthorWSize = AuthorWidget->GetDesiredSize();
+    wh.X = FMath::Max(QuoteWSize.X, AuthorWSize.X);
+    wh.Y = QuoteWSize.Y + AuthorWSize.Y;
+    wh = wh + Margin;
+  }
+  return wh;
 }
 
 void MAQuoteWidget::SetQuote(const FText& InQuote, const FText& InAuthor)

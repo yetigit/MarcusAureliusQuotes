@@ -11,6 +11,7 @@ public:
 
   void Construct(const FArguments& InArgs);
   void SetQuote(const FText& InQuote, const FText& InAuthor);
+  FVector2D GetContentSize() const;
 private:
 
   TSharedPtr<STextBlock> QuoteWidget;

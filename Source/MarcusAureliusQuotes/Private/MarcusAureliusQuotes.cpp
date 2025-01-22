@@ -24,7 +24,7 @@ quote display
 * [] the window should not be separate from the editor in the taskbar
 * [] progress bar for fetching quotes
 * [x] use plugin log instead of LogTemp
-* [] auto size the window based on its content upon displayquote()
+* [x] auto size the window based on its content upon displayquote()
 */
 
 DEFINE_LOG_CATEGORY(LogMarcusAureliusQuotes);
@@ -67,6 +67,11 @@ void FMarcusAureliusQuotesModule::UpdateWindowQuote(const FString &_Quote,
   if (WindowContent.IsValid()) {
     WindowContent->SetQuote(FText::FromString(_Quote),
                             FText::FromString(_Author));
+    if(SlateWindow.IsValid())
+    {
+      FVector2D GoodSize = WindowContent->GetContentSize();
+      SlateWindow->Resize(GoodSize);
+    }
   }
 }
 bool FMarcusAureliusQuotesModule::CanDisplayQuote()
