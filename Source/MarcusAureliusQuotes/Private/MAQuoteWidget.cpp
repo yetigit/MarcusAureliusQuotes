@@ -11,7 +11,7 @@ void MAQuoteWidget::Construct(const FArguments& InArgs)
     +SVerticalBox::Slot()
     .VAlign(VAlign_Center)
     .HAlign(HAlign_Fill)
-    .Padding(FMargin(20, 20, 20, 5))
+    .Padding(FMargin(10, 30, 10, 5))
     [
       SAssignNew(QuoteWidget, STextBlock)
       .Text(FText::FromString(TEXT(
@@ -25,9 +25,9 @@ void MAQuoteWidget::Construct(const FArguments& InArgs)
     ]
     +SVerticalBox::Slot()
     .AutoHeight()
-    .VAlign(VAlign_Bottom)
+    .VAlign(VAlign_Top)
     .HAlign(HAlign_Center)
-    .Padding(FMargin(0,0,0, 55))
+    .Padding(FMargin(0, 0, 0, 40))
     [
       SAssignNew(AuthorWidget, STextBlock)
       .Text(FText::FromString(TEXT(
