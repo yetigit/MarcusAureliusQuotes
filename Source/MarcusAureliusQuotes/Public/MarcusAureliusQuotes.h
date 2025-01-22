@@ -13,6 +13,8 @@
 
 #include "Framework/Application/SlateApplication.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogMarcusAureliusQuotes, Log, All);
+
 class FMarcusAureliusQuotesModule : public IModuleInterface
 {
 public:
