@@ -17,11 +17,14 @@
 * [] the window must not focus when the quote gets displayed, but it must stay
 on top without changing the focus
 * [] the window must disapear after X amount of seconds
-* [] the author text should lign up on the vertical
+* [x] the author text should lign up on the vertical
 * [] if the window is closed upon quote display it must be recreated for the
 quote display
 * [] a picture of the author should appear with the quote and his name
 * [] the window should not be separate from the editor in the taskbar
+* [] progress bar for fetching quotes
+* [] use plugin log instead of LogTemp
+* [] auto size the window based on its content upon displayquote()
 */
 
 #define LOCTEXT_NAMESPACE "FMarcusAureliusQuotesModule"
@@ -51,7 +54,7 @@ void FMarcusAureliusQuotesModule::StartupModule() {
   FHttpModule::Get().SetHttpTimeout(30.0f);
   bool bSuccessfulFetch = FetchQuotes(); //TODO: do something with this bool value
 
-  const float QuoteTick = 10.f;
+  const float QuoteTick = 4.f;
   TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
       FTickerDelegate::CreateRaw(this, &FMarcusAureliusQuotesModule::Tick),
       QuoteTick);

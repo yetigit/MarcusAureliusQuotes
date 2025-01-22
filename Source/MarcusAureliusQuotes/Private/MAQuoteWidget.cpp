@@ -9,39 +9,33 @@ void MAQuoteWidget::Construct(const FArguments& InArgs)
   [
     SNew(SVerticalBox)
     +SVerticalBox::Slot()
-    .Padding(FMargin(20, 10))
-    .AutoHeight()
+    .VAlign(VAlign_Center)
+    .HAlign(HAlign_Fill)
+    .Padding(FMargin(20, 20, 20, 5))
     [
-      SNew(SVerticalBox)
-      +SVerticalBox::Slot()
-      [
-        SAssignNew(QuoteWidget, STextBlock)
-        .Text(FText::FromString(TEXT(
-          "That which isn’t good for the hive, isn’t good for the bee."
-        )))
-        .AutoWrapText(true)
-        .WrapTextAt(0.0f)
-        .ColorAndOpacity(FLinearColor::White)
-        .Font(FCoreStyle::GetDefaultFontStyle("Regular", 16))
-        .Justification(ETextJustify::Center)
-      ]
+      SAssignNew(QuoteWidget, STextBlock)
+      .Text(FText::FromString(TEXT(
+        "That which isn’t good for the hive, isn’t good for the bee."
+      )))
+      .AutoWrapText(true)
+      .WrapTextAt(0.0f)
+      .ColorAndOpacity(FLinearColor::White)
+      .Font(FCoreStyle::GetDefaultFontStyle("Regular", 16))
+      .Justification(ETextJustify::Center)
     ]
     +SVerticalBox::Slot()
+    .AutoHeight()
+    .VAlign(VAlign_Bottom)
+    .HAlign(HAlign_Center)
+    .Padding(FMargin(0,0,0, 55))
     [
-
-      SNew(SVerticalBox)
-      +SVerticalBox::Slot()
-      [
-        SAssignNew(AuthorWidget, STextBlock)
-        .Text(FText::FromString(TEXT(
-          "Marcus Aurelius"
-        )))
-        .AutoWrapText(true)
-        .WrapTextAt(0.0f)
-        .ColorAndOpacity(FLinearColor::White)
-        .Font(FCoreStyle::GetDefaultFontStyle("Regular", 16))
-        .Justification(ETextJustify::Center)
-      ]
+      SAssignNew(AuthorWidget, STextBlock)
+      .Text(FText::FromString(TEXT(
+        "Marcus Aurelius"
+      )))
+      .ColorAndOpacity(FLinearColor::White)
+      .Font(FCoreStyle::GetDefaultFontStyle("Regular", 16))
+      .Justification(ETextJustify::Center)
     ]
 
   ];
