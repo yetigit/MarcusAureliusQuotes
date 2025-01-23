@@ -19,9 +19,9 @@
 * TODO:
 * [] the window must not focus when the quote gets displayed, but it must stay
 on top without changing the focus
-* [] the window must disapear after X amount of seconds
+* [x] the window must disapear after X amount of seconds
 * [x] the author text should lign up on the vertical
-* [] if the window is closed upon quote display it must be recreated for the
+* [] if the window is closed/destroyed upon quote display it must be recreated for the
 quote display
 * [] a picture of the author should appear with the quote and his name
 * [] the window should not be separate from the editor in the taskbar
