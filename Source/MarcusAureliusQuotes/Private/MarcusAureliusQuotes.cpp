@@ -17,7 +17,7 @@
 
 /*
 * TODO:
-* [] the window must not focus when the quote gets displayed, but it must stay
+* [x] the window must not focus when the quote gets displayed, but it must stay
 on top without changing the focus
 * [x] the window must disapear after X amount of seconds
 * [x] the author text should lign up on the vertical
@@ -28,6 +28,7 @@ quote display
 * [] progress bar for fetching quotes
 * [x] use plugin log instead of LogTemp
 * [x] auto size the window based on its content upon displayquote()
+* [] better window size for the quote display
 */
 
 DEFINE_LOG_CATEGORY(LogMarcusAureliusQuotes);
@@ -41,7 +42,13 @@ void FMarcusAureliusQuotesModule::CreateSlateWindow() {
                     .Title(FText::FromString(TEXT("Quote")))
                     .ClientSize(FVector2D(400, 400))
                     .SupportsMaximize(false)
-                    .SupportsMinimize(true)
+                    .SupportsMinimize(false)
+                    
+                    .IsTopmostWindow(true)
+                    .FocusWhenFirstShown(false)
+                    .ActivationPolicy(EWindowActivationPolicy::Never)
+                    .IsPopupWindow(true)
+                    .ShouldPreserveAspectRatio(true)
                     [WindowContent.ToSharedRef()];
                     // .Type(EWindowType::ToolTip) [WindowContent.ToSharedRef()];
 
@@ -55,6 +62,7 @@ void FMarcusAureliusQuotesModule::StartupModule() {
 
   QuotesReset();
   CreateSlateWindow();
+  SlateWindow->SetWindowMode(EWindowMode::Windowed);
 
   FHttpModule::Get().SetHttpTimeout(30.0f);
   bool bSuccessfulFetch = FetchQuotes();
@@ -68,14 +76,11 @@ void FMarcusAureliusQuotesModule::StartupModule() {
 
 void FMarcusAureliusQuotesModule::UpdateWindowQuote(const FString &_Quote,
                                                     const FString &_Author) {
-  if (WindowContent.IsValid()) {
+  if (SlateWindow.IsValid() && WindowContent.IsValid()) {
     WindowContent->SetQuote(FText::FromString(_Quote),
                             FText::FromString(_Author));
-    if(SlateWindow.IsValid())
-    {
       FVector2D GoodSize = WindowContent->GetContentSize();
       SlateWindow->Resize(GoodSize);
-    }
   }
 }
 bool FMarcusAureliusQuotesModule::CanDisplayQuote()
@@ -96,8 +101,15 @@ void FMarcusAureliusQuotesModule::DisplayQuote() {
 
     if (SlateWindow.IsValid()) {
 
+      #if 0
+      TSharedPtr<FSlateUser> SlateUser = FSlateApplication::Get().GetUser(0);
+      if(SlateUser.IsValid() && SlateUser->HasAnyCapture())
+      {
+        SlateWindow->SetWindowMode(EWindowMode::Windowed);
+      }
+      #endif
       SlateWindow->ShowWindow();
-      SlateWindow->BringToFront();
+      // SlateWindow->BringToFront(); // NOTE: if window is top-most this will happen on ShowWindow()
 
       GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
       auto l_HideWindow = [this](){
