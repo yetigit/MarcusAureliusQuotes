@@ -1,5 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 #include "MarcusAureliusQuotes.h"
+#include "Editor.h"
 
 #include "HttpModule.h"
 #include "Serialization/JsonSerializer.h"
@@ -11,6 +12,8 @@
 // #include "ViewportMessagePlugin.h"
 // #include "Engine/GameEngine.h"
 // #include "TimerManager.h"
+
+#include "TimerManager.h"
 
 /*
 * TODO:
@@ -54,12 +57,13 @@ void FMarcusAureliusQuotesModule::StartupModule() {
   CreateSlateWindow();
 
   FHttpModule::Get().SetHttpTimeout(30.0f);
-  bool bSuccessfulFetch = FetchQuotes(); //TODO: do something with this bool value
+  bool bSuccessfulFetch = FetchQuotes();
 
-  const float QuoteTick = 4.f;
+  QuoteTick_ = 10.f; // tick every x seconds
+  WindowLifetime_ = QuoteTick_ * 0.75; // seconds as fraction of the tick
   TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
       FTickerDelegate::CreateRaw(this, &FMarcusAureliusQuotesModule::Tick),
-      QuoteTick);
+      QuoteTick_);
 }
 
 void FMarcusAureliusQuotesModule::UpdateWindowQuote(const FString &_Quote,
@@ -91,7 +95,20 @@ void FMarcusAureliusQuotesModule::DisplayQuote() {
     UpdateWindowQuote(Quote.quote, AuthorPretty);
 
     if (SlateWindow.IsValid()) {
+
+      SlateWindow->ShowWindow();
       SlateWindow->BringToFront();
+
+      GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
+      auto l_HideWindow = [this](){
+        if(SlateWindow.IsValid())
+        {
+          SlateWindow->HideWindow();
+        }
+      };
+      GEditor->GetTimerManager()->SetTimer(
+          AutoHideTimerHandle, FTimerDelegate::CreateLambda(l_HideWindow),
+          WindowLifetime_, false);
     }
 
     if (!Quotes.Num()) {
@@ -157,6 +174,10 @@ void FMarcusAureliusQuotesModule::ShutdownModule()
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
   
+  if (GEditor)
+  {
+    GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
+  }
   KillWindow();
   QuotesReset();
   if (GEngine)

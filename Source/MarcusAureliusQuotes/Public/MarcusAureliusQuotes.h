@@ -2,7 +2,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
+#include "Templates/SharedPointer.h"
 #include "MAQuote.h"
 #include "Modules/ModuleManager.h"
 
@@ -23,6 +23,7 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
+private:
   bool FetchQuotes();
 
   void OnResponseReceived(
@@ -39,10 +40,15 @@ public:
   void UpdateWindowQuote(const FString& _Quote, const FString & _Author);
   void KillWindow();
 
-public: 
+private: 
   FTSTicker::FDelegateHandle TickerHandle;
   TArray<MAQuote> Quotes;
+
   TSharedPtr<SWindow> SlateWindow;
   TSharedPtr<class MAQuoteWidget> WindowContent;
+  FTimerHandle AutoHideTimerHandle;
+
+  float QuoteTick_;
+  float WindowLifetime_;
   bool bQuoteFetched_;
 };

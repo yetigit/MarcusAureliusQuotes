@@ -38,8 +38,9 @@ public class MarcusAureliusQuotes : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-                "Slate",
-                "SlateCore"
+        "UnrealEd",
+        "Slate",
+        "SlateCore"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
