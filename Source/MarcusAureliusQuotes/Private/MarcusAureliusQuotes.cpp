@@ -63,7 +63,7 @@ void FMarcusAureliusQuotesModule::StartupModule() {
 
   QuotesReset();
   CreateSlateWindow();
-  SlateWindow->SetWindowMode(EWindowMode::Windowed);
+  //SlateWindow->SetWindowMode(EWindowMode::Windowed);
 
   FHttpModule::Get().SetHttpTimeout(30.0f);
   bool bSuccessfulFetch = FetchQuotes();
