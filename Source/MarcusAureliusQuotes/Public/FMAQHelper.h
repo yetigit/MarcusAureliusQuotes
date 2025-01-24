@@ -1,15 +1,13 @@
 #pragma once
 
-
 #include "CoreMinimal.h"
 #include "FMAQuote.h"
 #include "Templates/SharedPointer.h"
 
-
+#include "Dom/JsonObject.h"
+#include "Dom/JsonValue.h"
 #include "Http.h"
 #include "Json.h"
-#include "Dom/JsonValue.h"
-#include "Dom/JsonObject.h"
 
 #include "Framework/Application/SlateApplication.h"
 
@@ -29,15 +27,15 @@ public:
 
 private:
   bool Tick(float);
-  void OnResponseReceived(
-      FHttpRequestPtr, FHttpResponsePtr, bool bWasSuccessful);
+  void OnResponseReceived(FHttpRequestPtr, FHttpResponsePtr,
+                          bool bWasSuccessful);
 
   bool CanDisplayQuote();
   void DisplayQuote();
-  void UpdateWindowQuote(const FString& _Quote, const FString & _Author);
+  void UpdateWindowQuote(const FString &_Quote, const FString &_Author);
   void KillWindow();
 
-private: 
+private:
   FTSTicker::FDelegateHandle TickerHandle;
   TArray<FMAQuote> Quotes;
 

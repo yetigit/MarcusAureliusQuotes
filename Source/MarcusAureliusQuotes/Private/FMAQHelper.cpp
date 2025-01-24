@@ -5,41 +5,28 @@
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonWriter.h"
 
-
 #include "SMAQuoteWidget.h"
 
 #include "TimerManager.h"
 
-
-
-
-FMAQHelper::FMAQHelper()
-{
+FMAQHelper::FMAQHelper() {
   QuoteTick_ = 8.f;
   WindowLifetime_ = QuoteTick_ * 0.7f;
   bQuoteFetched_ = false;
 }
 
-FMAQHelper::~FMAQHelper()
-{
-  this->FreeResources();
-}
+FMAQHelper::~FMAQHelper() { this->FreeResources(); }
 
-
-void FMAQHelper::FreeResources()
-{
-  if (GEditor)
-  {
+void FMAQHelper::FreeResources() {
+  if (GEditor) {
     GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
   }
   KillWindow();
   QuotesReset();
-  if (GEngine)
-  {
+  if (GEngine) {
     FTSTicker::GetCoreTicker().RemoveTicker(TickerHandle);
   }
 }
-
 
 void FMAQHelper::KillWindow() {
   if (auto SlateWindow = SlateWindowWP.Pin()) {
@@ -51,46 +38,42 @@ void FMAQHelper::KillWindow() {
   }
 }
 
-
-
 void FMAQHelper::CreateSlateWindow() {
 
   TSharedPtr<SMAQuoteWidget> WindowContent = SNew(SMAQuoteWidget);
   WindowContentWP = WindowContent;
-  TSharedPtr<SWindow> SlateWindow = SNew( SWindow)
-                    .Title(FText::FromString(TEXT("Quote")))
-                    .ClientSize(FVector2D(400, 400))
-                    .SupportsMaximize(false)
-                    .SupportsMinimize(false)
-                    
-                    .IsTopmostWindow(false)
-                    .FocusWhenFirstShown(false)
-                    .ActivationPolicy(EWindowActivationPolicy::Never)
-                    .IsPopupWindow(false)
-                    .ShouldPreserveAspectRatio(false)
-                    [WindowContent.ToSharedRef()];
+  TSharedPtr<SWindow> SlateWindow =
+      SNew(SWindow)
+          .Title(FText::FromString(TEXT("Quote")))
+          .ClientSize(FVector2D(400, 400))
+          .SupportsMaximize(false)
+          .SupportsMinimize(false)
+
+          .IsTopmostWindow(false)
+          .FocusWhenFirstShown(false)
+          .ActivationPolicy(EWindowActivationPolicy::Never)
+          .IsPopupWindow(false)
+          .ShouldPreserveAspectRatio(false)[WindowContent.ToSharedRef()];
   SlateWindowWP = SlateWindow;
   FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef());
-
 }
 
-
 void FMAQHelper::UpdateWindowQuote(const FString &_Quote,
-                                                    const FString &_Author) {
+                                   const FString &_Author) {
   auto SlateWindow = SlateWindowWP.Pin();
   auto WindowContent = WindowContentWP.Pin();
   if (SlateWindow.IsValid() && WindowContent.IsValid()) {
     WindowContent->SetQuote(FText::FromString(_Quote),
                             FText::FromString(_Author));
-      FVector2D GoodSize = WindowContent->GetContentSize();
-      SlateWindow->Resize(GoodSize);
+    FVector2D GoodSize = WindowContent->GetContentSize();
+    SlateWindow->Resize(GoodSize);
   }
 }
-bool FMAQHelper::CanDisplayQuote()
-{
+bool FMAQHelper::CanDisplayQuote() {
 
   auto SlateWindow = SlateWindowWP.Pin();
-  //UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("CanDisplayQuote()... SlateWindow pointer validity = %p"), SlateWindow.Get());
+  // UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("CanDisplayQuote()...
+  // SlateWindow pointer validity = %p"), SlateWindow.Get());
   return SlateWindow.IsValid() && SlateWindow->GetVisibility().IsVisible();
 }
 
@@ -101,8 +84,8 @@ void FMAQHelper::DisplayQuote() {
 #endif
   if (bQuoteFetched_ && Quotes.Num() && CanDisplayQuote()) {
 
-  auto SlateWindow = SlateWindowWP.Pin();
-  auto WindowContent = WindowContentWP.Pin();
+    auto SlateWindow = SlateWindowWP.Pin();
+    auto WindowContent = WindowContentWP.Pin();
     FMAQuote Quote = Quotes.Pop(true); // NOTE:Move opportunity
 
     // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green,);
@@ -110,26 +93,28 @@ void FMAQHelper::DisplayQuote() {
     FString AuthorPretty =
         FString::Format(TEXT("{0}{1}{0}"), {"~", *Quote.author});
 
-  //UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Before UpdateWindowQuote()... SlateWindow pointer validity = %p"), SlateWindow.Get());
+    // UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Before
+    // UpdateWindowQuote()... SlateWindow pointer validity = %p"),
+    // SlateWindow.Get());
     UpdateWindowQuote(Quote.quote, AuthorPretty);
 
     if (SlateWindow.IsValid()) {
 
-      #if 0
+#if 0
       TSharedPtr<FSlateUser> SlateUser = FSlateApplication::Get().GetUser(0);
       if(SlateUser.IsValid() && SlateUser->HasAnyCapture())
       {
         SlateWindow->SetWindowMode(EWindowMode::Windowed);
       }
-      #endif
+#endif
       SlateWindow->ShowWindow();
-       SlateWindow->BringToFront(); // NOTE: if window is top-most this will happen on ShowWindow()
+      SlateWindow->BringToFront(); // NOTE: if window is top-most this will
+                                   // happen on ShowWindow()
 
       GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
-      auto & SlateWindowWeak = this->SlateWindowWP;
-      auto l_HideWindow = [SlateWindowWeak](){
-        if(auto p = SlateWindowWeak.Pin())
-        {
+      auto &SlateWindowWeak = this->SlateWindowWP;
+      auto l_HideWindow = [SlateWindowWeak]() {
+        if (auto p = SlateWindowWeak.Pin()) {
           p->HideWindow();
         }
       };
@@ -148,20 +133,17 @@ void FMAQHelper::DisplayQuote() {
 
 void FMAQHelper::AddTicker() {
 
+  // TODO: explicit multithread call
   TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
-      FTickerDelegate::CreateSP(AsShared(), &FMAQHelper::Tick),
-      QuoteTick_);
-
+      FTickerDelegate::CreateSP(AsShared(), &FMAQHelper::Tick), QuoteTick_);
 }
 
 bool FMAQHelper::Tick(float DeltaTime) {
   if (GEngine) {
-    if(CanDisplayQuote())
-    {
-      if(!bQuoteFetched_ && !FetchQuotes() && !bQuoteFetched_)
-      {
-          UE_LOG(LogTemp, Warning, TEXT("Failed attempt to fetch quotes"));
-          return true;
+    if (CanDisplayQuote()) {
+      if (!bQuoteFetched_ && !FetchQuotes() && !bQuoteFetched_) {
+        UE_LOG(LogTemp, Warning, TEXT("Failed attempt to fetch quotes"));
+        return true;
       }
       DisplayQuote();
     }
@@ -188,19 +170,17 @@ void FMAQHelper::PrintAllQuotes(int Num, bool bFromBottom) {
     }
   }
 }
-void FMAQHelper::QuotesReset()
-{
+void FMAQHelper::QuotesReset() {
   Quotes.Empty();
   bQuoteFetched_ = false;
 }
 
-void FMAQHelper::SetRequestTimeout(const float _HowLong)
-{
+void FMAQHelper::SetRequestTimeout(const float _HowLong) {
   FHttpModule::Get().SetHttpTimeout(_HowLong);
 }
 
 bool FMAQHelper::FetchQuotes() {
-  int NumberOfQuotes = 99;
+  int NumberOfQuotes = 99; // TODO: Need getset
   FString Url = {"https://stoic-quotes.com/api/quotes?num="};
   Url += FString::FromInt(NumberOfQuotes);
 
@@ -210,15 +190,16 @@ bool FMAQHelper::FetchQuotes() {
   Request->SetVerb("GET");
   Request->SetURL(Url);
 
-  Request->OnProcessRequestComplete().BindSP(
-      AsShared(), &FMAQHelper::OnResponseReceived);
+  // TODO: explicit multithread call
+  Request->OnProcessRequestComplete().BindSP(AsShared(),
+                                             &FMAQHelper::OnResponseReceived);
 
   return Request->ProcessRequest();
 }
 
 void FMAQHelper::OnResponseReceived(FHttpRequestPtr Request,
-                                                     FHttpResponsePtr Response,
-                                                     bool bWasSuccessful) {
+                                    FHttpResponsePtr Response,
+                                    bool bWasSuccessful) {
 
   QuotesReset();
 
@@ -240,7 +221,6 @@ void FMAQHelper::OnResponseReceived(FHttpRequestPtr Request,
         QuoteObject.author = QuoteAuthor;
         Quotes.Add(QuoteObject);
       }
-
     }
     bQuoteFetched_ = bool(Quotes.Num());
   };

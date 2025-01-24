@@ -5,7 +5,6 @@
 #include "Templates/SharedPointer.h"
 #include "Modules/ModuleManager.h"
 
-#include "Templates/SharedPointer.h"
 
 
 DECLARE_LOG_CATEGORY_EXTERN(LogMarcusAureliusQuotes, Log, All);
@@ -19,5 +18,5 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
-  TSharedPtr<class FMAQHelper> ResourcesManager_;
+  TSharedPtr<class FMAQHelper> QuoteManager_;
 };
