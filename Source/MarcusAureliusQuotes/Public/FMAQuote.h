@@ -1,11 +1,11 @@
 #pragma once
 #include "Containers/UnrealString.h"
 
-class MAQuote
+class FMAQuote
 {
 public:
-  MAQuote() = default;
-  MAQuote(FString const &InQuote, FString const &InAuthor) :
+  FMAQuote() = default;
+  FMAQuote(FString const &InQuote, FString const &InAuthor) :
   quote(InQuote), author(InAuthor)
   {}
   FString quote;

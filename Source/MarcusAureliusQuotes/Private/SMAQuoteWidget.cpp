@@ -1,9 +1,9 @@
-#include "MAQuoteWidget.h"
+#include "SMAQuoteWidget.h"
 #include "Framework/Application/SlateApplication.h"
 #include "Widgets/Text/STextBlock.h"
 #include "Widgets/Layout/SBox.h"
 
-void MAQuoteWidget::Construct(const FArguments& InArgs)
+void SMAQuoteWidget::Construct(const FArguments& InArgs)
 {
   ChildSlot
   [
@@ -40,7 +40,7 @@ void MAQuoteWidget::Construct(const FArguments& InArgs)
 
   ];
 }
-FVector2D MAQuoteWidget::GetContentSize() const
+FVector2D SMAQuoteWidget::GetContentSize() const
 {
   FVector2D wh(300, 300);
   FVector2D Margin(30, 80);
@@ -55,7 +55,7 @@ FVector2D MAQuoteWidget::GetContentSize() const
   return wh;
 }
 
-void MAQuoteWidget::SetQuote(const FText& InQuote, const FText& InAuthor)
+void SMAQuoteWidget::SetQuote(const FText& InQuote, const FText& InAuthor)
 {
   if (QuoteWidget.IsValid() && AuthorWidget.IsValid()) {
     QuoteWidget->SetText(InQuote);
