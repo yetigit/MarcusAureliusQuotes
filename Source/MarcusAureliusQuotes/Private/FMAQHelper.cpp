@@ -52,7 +52,7 @@ void FMAQHelper::CreateSlateWindow() {
           .IsTopmostWindow(false)
           .FocusWhenFirstShown(false)
           .ActivationPolicy(EWindowActivationPolicy::Never)
-          .IsPopupWindow(false)
+          .IsPopupWindow(true)
           .ShouldPreserveAspectRatio(false)[WindowContent.ToSharedRef()];
   SlateWindowWP = SlateWindow;
   FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef());
