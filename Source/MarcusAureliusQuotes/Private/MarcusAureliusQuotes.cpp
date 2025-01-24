@@ -31,6 +31,10 @@ quote display
 * [] better window size for the quote display
 * [] add custom CLOSE button (which will hide the window only)
 */
+// TODO :
+
+// fix possible multi threading bugs with delegates, not passing this 
+// but a shared pointer 
 
 DEFINE_LOG_CATEGORY(LogMarcusAureliusQuotes);
 
@@ -38,8 +42,9 @@ DEFINE_LOG_CATEGORY(LogMarcusAureliusQuotes);
 
 void FMarcusAureliusQuotesModule::CreateSlateWindow() {
 
-  WindowContent = SNew(MAQuoteWidget);
-  SlateWindow = SNew(SWindow)
+  TSharedPtr<MAQuoteWidget> WindowContent = SNew(MAQuoteWidget);
+  WindowContentWP = WindowContent;
+  TSharedPtr<SWindow> SlateWindow = SNew( SWindow)
                     .Title(FText::FromString(TEXT("Quote")))
                     .ClientSize(FVector2D(400, 400))
                     .SupportsMaximize(false)
@@ -48,11 +53,10 @@ void FMarcusAureliusQuotesModule::CreateSlateWindow() {
                     .IsTopmostWindow(false)
                     .FocusWhenFirstShown(false)
                     .ActivationPolicy(EWindowActivationPolicy::Never)
-                    .IsPopupWindow(true)
-                    .ShouldPreserveAspectRatio(true)
+                    .IsPopupWindow(false)
+                    .ShouldPreserveAspectRatio(false)
                     [WindowContent.ToSharedRef()];
-                    // .Type(EWindowType::ToolTip) [WindowContent.ToSharedRef()];
-
+  SlateWindowWP = SlateWindow;
   FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef());
 
 }
@@ -63,7 +67,6 @@ void FMarcusAureliusQuotesModule::StartupModule() {
 
   QuotesReset();
   CreateSlateWindow();
-  //SlateWindow->SetWindowMode(EWindowMode::Windowed);
 
   FHttpModule::Get().SetHttpTimeout(30.0f);
   bool bSuccessfulFetch = FetchQuotes();
@@ -77,6 +80,8 @@ void FMarcusAureliusQuotesModule::StartupModule() {
 
 void FMarcusAureliusQuotesModule::UpdateWindowQuote(const FString &_Quote,
                                                     const FString &_Author) {
+  auto SlateWindow = SlateWindowWP.Pin();
+  auto WindowContent = WindowContentWP.Pin();
   if (SlateWindow.IsValid() && WindowContent.IsValid()) {
     WindowContent->SetQuote(FText::FromString(_Quote),
                             FText::FromString(_Author));
@@ -86,11 +91,21 @@ void FMarcusAureliusQuotesModule::UpdateWindowQuote(const FString &_Quote,
 }
 bool FMarcusAureliusQuotesModule::CanDisplayQuote()
 {
+
+  auto SlateWindow = SlateWindowWP.Pin();
+  //UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("CanDisplayQuote()... SlateWindow pointer validity = %p"), SlateWindow.Get());
   return SlateWindow.IsValid() && SlateWindow->GetVisibility().IsVisible();
 }
 
 void FMarcusAureliusQuotesModule::DisplayQuote() {
+
+#if 0
+  UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Start of DisplayQuote()... SlateWindow pointer validity = %p"), SlateWindowWP.Pin().Get());
+#endif
   if (bQuoteFetched_ && Quotes.Num() && CanDisplayQuote()) {
+
+  auto SlateWindow = SlateWindowWP.Pin();
+  auto WindowContent = WindowContentWP.Pin();
     MAQuote Quote = Quotes.Pop(true); // NOTE:Move opportunity
 
     // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green,);
@@ -98,6 +113,7 @@ void FMarcusAureliusQuotesModule::DisplayQuote() {
     FString AuthorPretty =
         FString::Format(TEXT("{0}{1}{0}"), {"~", *Quote.author});
 
+  //UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Before UpdateWindowQuote()... SlateWindow pointer validity = %p"), SlateWindow.Get());
     UpdateWindowQuote(Quote.quote, AuthorPretty);
 
     if (SlateWindow.IsValid()) {
@@ -113,10 +129,11 @@ void FMarcusAureliusQuotesModule::DisplayQuote() {
        SlateWindow->BringToFront(); // NOTE: if window is top-most this will happen on ShowWindow()
 
       GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
-      auto l_HideWindow = [this](){
-        if(SlateWindow.IsValid())
+      auto & SlateWindowWeak = this->SlateWindowWP;
+      auto l_HideWindow = [SlateWindowWeak](){
+        if(auto p = SlateWindowWeak.Pin())
         {
-          SlateWindow->HideWindow();
+          p->HideWindow();
         }
       };
       GEditor->GetTimerManager()->SetTimer(
@@ -173,10 +190,10 @@ void FMarcusAureliusQuotesModule::QuotesReset()
 }
 
 void FMarcusAureliusQuotesModule::KillWindow() {
-  if (SlateWindow.IsValid()) {
+  if (auto SlateWindow = SlateWindowWP.Pin()) {
     SlateWindow->RequestDestroyWindow();
     SlateWindow.Reset();
-    if (WindowContent.IsValid()) {
+    if (auto WindowContent = WindowContentWP.Pin()) {
       WindowContent.Reset();
     }
   }
