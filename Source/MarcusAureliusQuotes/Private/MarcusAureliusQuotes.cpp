@@ -21,7 +21,7 @@ for the quote display
 */
 // TODO :
 
-DEFINE_LOG_CATEGORY(LogMarcusAureliusQuotes);
+#include "MarcusAureliusQuotesLog.h"
 
 #define LOCTEXT_NAMESPACE "FMarcusAureliusQuotesModule"
 
@@ -29,6 +29,7 @@ void FMarcusAureliusQuotesModule::StartupModule() {
   // This code will execute after your module is loaded into memory; the exact
   // timing is specified in the .uplugin file per-module
 
+  //UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("StartupModule()"));
   QuoteManager_ = MakeShared<FMAQHelper>();
   QuoteManager_->QuotesReset();
   QuoteManager_->CreateSlateWindow();

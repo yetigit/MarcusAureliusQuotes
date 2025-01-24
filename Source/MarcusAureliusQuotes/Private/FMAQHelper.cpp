@@ -8,6 +8,7 @@
 #include "SMAQuoteWidget.h"
 
 #include "TimerManager.h"
+#include "MarcusAureliusQuotesLog.h"
 
 FMAQHelper::FMAQHelper() {
   QuoteTick_ = 8.f;
@@ -127,7 +128,7 @@ void FMAQHelper::DisplayQuote() {
       QuotesReset();
     }
   } else {
-    UE_LOG(LogTemp, Warning, TEXT("No quotes to display"));
+    UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("No quotes to display"));
   }
 }
 
@@ -142,7 +143,7 @@ bool FMAQHelper::Tick(float DeltaTime) {
   if (GEngine) {
     if (CanDisplayQuote()) {
       if (!bQuoteFetched_ && !FetchQuotes() && !bQuoteFetched_) {
-        UE_LOG(LogTemp, Warning, TEXT("Failed attempt to fetch quotes"));
+        UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Failed attempt to fetch quotes"));
         return true;
       }
       DisplayQuote();
@@ -166,7 +167,7 @@ void FMAQHelper::PrintAllQuotes(int Num, bool bFromBottom) {
       const FString &currentQuote = Quote.quote;
       const FString &currentAuthor = Quote.author;
 
-      UE_LOG(LogTemp, Warning, TEXT("%s -- %s"), *currentQuote, *currentAuthor);
+      UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("%s -- %s"), *currentQuote, *currentAuthor);
     }
   }
 }
@@ -184,14 +185,13 @@ bool FMAQHelper::FetchQuotes() {
   FString Url = {"https://stoic-quotes.com/api/quotes?num="};
   Url += FString::FromInt(NumberOfQuotes);
 
-  UE_LOG(LogTemp, Warning, TEXT("Fetching quotes.. ."));
+  UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Fetching quotes.. ."));
   TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request =
       FHttpModule::Get().CreateRequest();
   Request->SetVerb("GET");
   Request->SetURL(Url);
 
-  // TODO: explicit multithread call
-  Request->OnProcessRequestComplete().BindSP(AsShared(),
+  Request->OnProcessRequestComplete().BindThreadSafeSP(this,
                                              &FMAQHelper::OnResponseReceived);
 
   return Request->ProcessRequest();
@@ -204,7 +204,7 @@ void FMAQHelper::OnResponseReceived(FHttpRequestPtr Request,
   QuotesReset();
 
   auto OnError = [](const FString &InError) {
-    UE_LOG(LogTemp, Error, TEXT("Error: %s"), *InError);
+    UE_LOG(LogMarcusAureliusQuotes, Error, TEXT("Error: %s"), *InError);
   };
 
   auto OnSuccess = [this](const TArray<TSharedPtr<FJsonValue>> &JsonArray) {
