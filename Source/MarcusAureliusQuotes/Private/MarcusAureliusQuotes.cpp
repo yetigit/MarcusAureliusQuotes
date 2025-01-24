@@ -24,7 +24,7 @@ on top without changing the focus
 * [] if the window is closed/destroyed upon quote display it must be recreated for the
 quote display
 * [] a picture of the author should appear with the quote and his name
-* [] the window should not be separate from the editor in the taskbar
+* [x] the window should not be separate from the editor in the taskbar
 * [] progress bar for fetching quotes
 * [x] use plugin log instead of LogTemp
 * [x] auto size the window based on its content upon displayquote()
@@ -37,23 +37,36 @@ DEFINE_LOG_CATEGORY(LogMarcusAureliusQuotes);
 #define LOCTEXT_NAMESPACE "FMarcusAureliusQuotesModule"
 
 void FMarcusAureliusQuotesModule::CreateSlateWindow() {
+    {
+    TSharedPtr<MAQuoteWidget> WindowContentSP = SNew(MAQuoteWidget);
+    WindowContent = WindowContentSP;
+    TSharedPtr<SWindow> SlateWindowSP = SNew(SWindow)
+        .Title(FText::FromString(TEXT("Quote")))
+        .ClientSize(FVector2D(400, 400))
+        .SupportsMaximize(false)
+        .SupportsMinimize(false)
 
-  WindowContent = SNew(MAQuoteWidget);
-  SlateWindow = SNew(SWindow)
-                    .Title(FText::FromString(TEXT("Quote")))
-                    .ClientSize(FVector2D(400, 400))
-                    .SupportsMaximize(false)
-                    .SupportsMinimize(false)
-                    
-                    .IsTopmostWindow(false)
-                    .FocusWhenFirstShown(false)
-                    .ActivationPolicy(EWindowActivationPolicy::Never)
-                    .IsPopupWindow(true)
-                    .ShouldPreserveAspectRatio(true)
-                    [WindowContent.ToSharedRef()];
-                    // .Type(EWindowType::ToolTip) [WindowContent.ToSharedRef()];
+        .IsTopmostWindow(false)
+        .FocusWhenFirstShown(false)
+        .ActivationPolicy(EWindowActivationPolicy::Never)
+        .IsPopupWindow(false)
+        .ShouldPreserveAspectRatio(true)
+        [WindowContentSP.ToSharedRef()];
 
-  FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef());
+    SlateWindow = SlateWindowSP;
+    FSlateApplication::Get().AddWindow(SlateWindowSP.ToSharedRef());
+}
+    //SlateWindow.Pin()->DestroyWindowImmediately();
+#if 0
+  if (!SlateWindow.IsValid())
+  {
+      UE_LOG(LogTemp, Warning, TEXT("EXPECTED"));
+	  check(0);
+  }
+  else {
+	  check(0);
+  }
+#endif
 
 }
 
@@ -63,7 +76,6 @@ void FMarcusAureliusQuotesModule::StartupModule() {
 
   QuotesReset();
   CreateSlateWindow();
-  //SlateWindow->SetWindowMode(EWindowMode::Windowed);
 
   FHttpModule::Get().SetHttpTimeout(30.0f);
   bool bSuccessfulFetch = FetchQuotes();
@@ -77,19 +89,28 @@ void FMarcusAureliusQuotesModule::StartupModule() {
 
 void FMarcusAureliusQuotesModule::UpdateWindowQuote(const FString &_Quote,
                                                     const FString &_Author) {
-  if (SlateWindow.IsValid() && WindowContent.IsValid()) {
-    WindowContent->SetQuote(FText::FromString(_Quote),
+    if (!SlateWindow.IsValid())
+        return;
+  if (SlateWindow.Pin() && WindowContent.Pin().IsValid()) {
+      WindowContent.Pin()->SetQuote(FText::FromString(_Quote),
                             FText::FromString(_Author));
-      FVector2D GoodSize = WindowContent->GetContentSize();
-      SlateWindow->Resize(GoodSize);
+      FVector2D GoodSize = WindowContent.Pin()->GetContentSize();
+      SlateWindow.Pin()->Resize(GoodSize);
   }
 }
 bool FMarcusAureliusQuotesModule::CanDisplayQuote()
 {
-  return SlateWindow.IsValid() && SlateWindow->GetVisibility().IsVisible();
+
+  //int x = int(SlateWindow.IsValid());
+  UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("CanDisplayQuote()... SlateWindow pointer validity = %p"), SlateWindow.Pin().Get());
+  return SlateWindow.Pin().IsValid() && SlateWindow.Pin()->GetVisibility().IsVisible();
 }
 
 void FMarcusAureliusQuotesModule::DisplayQuote() {
+  UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("GOING FOR DISPLAY"));
+  int x = int(SlateWindow.IsValid());
+  UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("SlateWindow pointer validity = %d"), x);
+
   if (bQuoteFetched_ && Quotes.Num() && CanDisplayQuote()) {
     MAQuote Quote = Quotes.Pop(true); // NOTE:Move opportunity
 
@@ -100,23 +121,16 @@ void FMarcusAureliusQuotesModule::DisplayQuote() {
 
     UpdateWindowQuote(Quote.quote, AuthorPretty);
 
-    if (SlateWindow.IsValid()) {
+    if (SlateWindow.Pin().IsValid()) {
 
-      #if 0
-      TSharedPtr<FSlateUser> SlateUser = FSlateApplication::Get().GetUser(0);
-      if(SlateUser.IsValid() && SlateUser->HasAnyCapture())
-      {
-        SlateWindow->SetWindowMode(EWindowMode::Windowed);
-      }
-      #endif
-      SlateWindow->ShowWindow();
-       SlateWindow->BringToFront(); // NOTE: if window is top-most this will happen on ShowWindow()
+      SlateWindow.Pin()->ShowWindow();
+       SlateWindow.Pin()->BringToFront(); // NOTE: if window is top-most this will happen on ShowWindow()
 
       GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
       auto l_HideWindow = [this](){
-        if(SlateWindow.IsValid())
+        if(SlateWindow.Pin().IsValid())
         {
-          SlateWindow->HideWindow();
+          SlateWindow.Pin()->HideWindow();
         }
       };
       GEditor->GetTimerManager()->SetTimer(
@@ -173,10 +187,10 @@ void FMarcusAureliusQuotesModule::QuotesReset()
 }
 
 void FMarcusAureliusQuotesModule::KillWindow() {
-  if (SlateWindow.IsValid()) {
-    SlateWindow->RequestDestroyWindow();
+  if (SlateWindow.Pin().IsValid()) {
+    SlateWindow.Pin()->RequestDestroyWindow();
     SlateWindow.Reset();
-    if (WindowContent.IsValid()) {
+    if (WindowContent.Pin().IsValid()) {
       WindowContent.Reset();
     }
   }

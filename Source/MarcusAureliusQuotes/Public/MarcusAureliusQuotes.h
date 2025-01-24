@@ -44,8 +44,8 @@ private:
   FTSTicker::FDelegateHandle TickerHandle;
   TArray<MAQuote> Quotes;
 
-  TSharedPtr<SWindow> SlateWindow;
-  TSharedPtr<class MAQuoteWidget> WindowContent;
+  TWeakPtr<SWindow> SlateWindow;
+  TWeakPtr<class MAQuoteWidget> WindowContent;
   FTimerHandle AutoHideTimerHandle;
 
   float QuoteTick_;
