@@ -45,7 +45,7 @@ void FMarcusAureliusQuotesModule::CreateSlateWindow() {
                     .SupportsMaximize(false)
                     .SupportsMinimize(false)
                     
-                    .IsTopmostWindow(true)
+                    .IsTopmostWindow(false)
                     .FocusWhenFirstShown(false)
                     .ActivationPolicy(EWindowActivationPolicy::Never)
                     .IsPopupWindow(true)
@@ -110,7 +110,7 @@ void FMarcusAureliusQuotesModule::DisplayQuote() {
       }
       #endif
       SlateWindow->ShowWindow();
-      // SlateWindow->BringToFront(); // NOTE: if window is top-most this will happen on ShowWindow()
+       SlateWindow->BringToFront(); // NOTE: if window is top-most this will happen on ShowWindow()
 
       GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
       auto l_HideWindow = [this](){
