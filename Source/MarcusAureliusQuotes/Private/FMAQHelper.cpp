@@ -186,7 +186,7 @@ void FMAQHelper::SetRequestTimeout(const float _HowLong) {
 bool FMAQHelper::FetchQuotes() {
   // int NumberOfQuotes = NumQuotes_;
   FString Url = {"https://stoic-quotes.com/api/quotes?num="};
-  Url += FString::FromInt(NumberOfQuotes);
+  Url += FString::FromInt(NumQuotes_);
 
   UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Fetching quotes.. ."));
   TSharedRef<IHttpRequest, ESPMode::ThreadSafe> Request =
