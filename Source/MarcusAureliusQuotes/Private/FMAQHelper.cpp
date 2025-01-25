@@ -55,17 +55,24 @@ void FMAQHelper::CreateSlateWindow() {
   TSharedPtr<SWindow> SlateWindow =
       SNew(SWindow)
           .Title(FText::FromString(TEXT("Quote")))
-          .ClientSize(FVector2D(400, 400))
+          .ClientSize(FVector2D(2000, 2000))
           .SupportsMaximize(false)
           .SupportsMinimize(false)
 
           .IsTopmostWindow(false)
           .FocusWhenFirstShown(false)
           .ActivationPolicy(EWindowActivationPolicy::Never)
-          .IsPopupWindow(true)
+          .IsPopupWindow(false)
           .ShouldPreserveAspectRatio(false)[WindowContent.ToSharedRef()];
   SlateWindowWP = SlateWindow;
   FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef());
+#if 0
+  if (SlateWindow.IsValid()) {
+    SlateWindow->ShowWindow();
+    FVector2D GoodSize = WindowContent->GetQuotationSize();
+    SlateWindow->Resize(GoodSize);
+  }
+#endif
 }
 
 void FMAQHelper::UpdateWindowQuote(const FString &_Quote,
@@ -75,7 +82,13 @@ void FMAQHelper::UpdateWindowQuote(const FString &_Quote,
   if (SlateWindow.IsValid() && WindowContent.IsValid()) {
     WindowContent->SetQuote(FText::FromString(_Quote),
                             FText::FromString(_Author));
-    FVector2D GoodSize = WindowContent->GetContentSize();
+    FVector2D GoodSize = WindowContent->GetQuotationSize();
+#if 1
+    auto TitleBarSize = SlateWindow->GetTitleBarSize();
+    if (TitleBarSize.IsSet()) {
+      GoodSize.Y += TitleBarSize.Get();
+    }
+#endif
     SlateWindow->Resize(GoodSize);
   }
 }
