@@ -10,10 +10,19 @@
 #include "TimerManager.h"
 #include "MarcusAureliusQuotesLog.h"
 
+/*
+ * NOTE:
+ * binds:
+ * http request
+ * window to timer
+ * ticker
+*/
+
 FMAQHelper::FMAQHelper() {
   QuoteTick_ = 8.f;
   WindowLifetime_ = QuoteTick_ * 0.7f;
   bQuoteFetched_ = false;
+  NumQuotes_ = 99;
 }
 
 FMAQHelper::~FMAQHelper() { this->FreeResources(); }
@@ -73,44 +82,29 @@ void FMAQHelper::UpdateWindowQuote(const FString &_Quote,
 bool FMAQHelper::CanDisplayQuote() {
 
   auto SlateWindow = SlateWindowWP.Pin();
-  // UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("CanDisplayQuote()...
-  // SlateWindow pointer validity = %p"), SlateWindow.Get());
   return SlateWindow.IsValid() && SlateWindow->GetVisibility().IsVisible();
 }
 
 void FMAQHelper::DisplayQuote() {
 
-#if 0
-  UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Start of DisplayQuote()... SlateWindow pointer validity = %p"), SlateWindowWP.Pin().Get());
-#endif
   if (bQuoteFetched_ && Quotes.Num() && CanDisplayQuote()) {
 
     auto SlateWindow = SlateWindowWP.Pin();
     auto WindowContent = WindowContentWP.Pin();
-    FMAQuote Quote = Quotes.Pop(true); // NOTE:Move opportunity
-
-    // GEngine->AddOnScreenDebugMessage(-1, 4.f, FColor::Green,);
+    FMAQuote && Quote = Quotes.Pop(true);
 
     FString AuthorPretty =
         FString::Format(TEXT("{0}{1}{0}"), {"~", *Quote.author});
 
-    // UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Before
-    // UpdateWindowQuote()... SlateWindow pointer validity = %p"),
-    // SlateWindow.Get());
     UpdateWindowQuote(Quote.quote, AuthorPretty);
 
     if (SlateWindow.IsValid()) {
 
-#if 0
-      TSharedPtr<FSlateUser> SlateUser = FSlateApplication::Get().GetUser(0);
-      if(SlateUser.IsValid() && SlateUser->HasAnyCapture())
-      {
-        SlateWindow->SetWindowMode(EWindowMode::Windowed);
-      }
-#endif
       SlateWindow->ShowWindow();
-      SlateWindow->BringToFront(); // NOTE: if window is top-most this will
-                                   // happen on ShowWindow()
+
+      // NOTE: if window is top-most this will
+      // happen on ShowWindow()
+      SlateWindow->BringToFront(); 
 
       GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
       auto &SlateWindowWeak = this->SlateWindowWP;
@@ -134,15 +128,24 @@ void FMAQHelper::DisplayQuote() {
 
 void FMAQHelper::AddTicker() {
 
-  // TODO: explicit multithread call
   TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
       FTickerDelegate::CreateSP(AsShared(), &FMAQHelper::Tick), QuoteTick_);
 }
 
 bool FMAQHelper::Tick(float DeltaTime) {
+
+  auto SlateWindow = SlateWindowWP.Pin();
+  auto WindowContent = WindowContentWP.Pin();
+  if(!SlateWindow.IsValid())
+  {
+    // Window has been destroyed, we re-create
+    UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("WINDOW RECREATE"));
+    CreateSlateWindow();
+  }
+
   if (GEngine) {
     if (CanDisplayQuote()) {
-      if (!bQuoteFetched_ && !FetchQuotes() && !bQuoteFetched_) {
+      if (!bQuoteFetched_ && !FetchQuotes()) {
         UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Failed attempt to fetch quotes"));
         return true;
       }
@@ -181,7 +184,7 @@ void FMAQHelper::SetRequestTimeout(const float _HowLong) {
 }
 
 bool FMAQHelper::FetchQuotes() {
-  int NumberOfQuotes = 99; // TODO: Need getset
+  // int NumberOfQuotes = NumQuotes_;
   FString Url = {"https://stoic-quotes.com/api/quotes?num="};
   Url += FString::FromInt(NumberOfQuotes);
 

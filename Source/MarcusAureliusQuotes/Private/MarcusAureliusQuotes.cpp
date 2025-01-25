@@ -9,17 +9,16 @@
 on top without changing the focus
 * [x] the window must disapear after X amount of seconds
 * [x] the author text should lign up on the vertical
-* [] if the window is closed/destroyed upon quote display it must be recreated
+* [x] if the window is closed/destroyed upon quote display it must be recreated
 for the quote display
 * [] a picture of the author should appear with the quote and his name
-* [] the window should not be separate from the editor in the taskbar
+* [x] the window should not be separate from the editor in the taskbar
 * [] progress bar for fetching quotes
 * [x] use plugin log instead of LogTemp
 * [x] auto size the window based on its content upon displayquote()
 * [] better window size for the quote display
 * [] add custom CLOSE button (which will hide the window only)
 */
-// TODO :
 
 #include "MarcusAureliusQuotesLog.h"
 
@@ -29,12 +28,18 @@ void FMarcusAureliusQuotesModule::StartupModule() {
   // This code will execute after your module is loaded into memory; the exact
   // timing is specified in the .uplugin file per-module
 
-  //UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("StartupModule()"));
   QuoteManager_ = MakeShared<FMAQHelper>();
+
+  QuoteManager_->SetRequestTimeout(30.f);
+  const float ticksEvery = 9.f;
+  const float windowFadesAfter = ticksEvery * 0.7f;
+  QuoteManager_->QuoteTick_ = ticksEvery;
+  QuoteManager_->WindowLifetime_ = windowFadesAfter;
+  QuoteManager_->NumQuotes_ = 99;
+
   QuoteManager_->QuotesReset();
   QuoteManager_->CreateSlateWindow();
 
-  QuoteManager_->SetRequestTimeout(30.f);
   bool bSuccessfulFetch = QuoteManager_->FetchQuotes();
 
   QuoteManager_->AddTicker();

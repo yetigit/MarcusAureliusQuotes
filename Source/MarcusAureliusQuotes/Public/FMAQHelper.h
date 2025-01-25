@@ -43,7 +43,10 @@ private:
   TWeakPtr<class SMAQuoteWidget> WindowContentWP;
   FTimerHandle AutoHideTimerHandle;
 
+public:
+  unsigned NumQuotes_;
   float QuoteTick_;
   float WindowLifetime_;
+private:
   bool bQuoteFetched_;
 };
