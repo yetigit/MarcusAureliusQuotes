@@ -16,7 +16,7 @@ for the quote display
 * [] progress bar for fetching quotes
 * [x] use plugin log instead of LogTemp
 * [x] auto size the window based on its content upon displayquote()
-* [] better window size for the quote display
+* [x] better window size for the quote display
 * [] add custom CLOSE button (which will hide the window only)
 */
 
