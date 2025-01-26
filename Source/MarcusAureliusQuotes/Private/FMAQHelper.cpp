@@ -56,6 +56,7 @@ void FMAQHelper::CreateSlateWindow() {
       SNew(SWindow)
           .Title(FText::FromString(TEXT("Quote")))
           .ClientSize(FVector2D(2000, 2000))
+          .ScreenPosition(FVector2D(2000, 2000))
           .SupportsMaximize(false)
           .SupportsMinimize(false)
 
@@ -65,7 +66,17 @@ void FMAQHelper::CreateSlateWindow() {
           .IsPopupWindow(false)
           .ShouldPreserveAspectRatio(false)[WindowContent.ToSharedRef()];
   SlateWindowWP = SlateWindow;
-  FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef());
+  FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef(), false);
+}
+
+void FMAQHelper::UpdateWindowSize()
+{
+	auto SlateWindow = SlateWindowWP.Pin();
+	SlateWindow->SlatePrepass( FSlateApplicationBase::Get().GetApplicationScale() * SlateWindow->GetDPIScaleFactor());
+	const FVector2f WindowDesiredSizePixels = SlateWindow->GetDesiredSize();
+	FVector2d WPos = SlateWindow->GetPositionInScreen();
+	SlateWindow->ReshapeWindow(WPos, WindowDesiredSizePixels);
+	SlateWindow->SetCachedSize(WindowDesiredSizePixels);
 }
 
 void FMAQHelper::UpdateWindowQuote(const FString &_Quote,
@@ -75,10 +86,9 @@ void FMAQHelper::UpdateWindowQuote(const FString &_Quote,
   if (SlateWindow.IsValid() && WindowContent.IsValid()) {
     WindowContent->SetQuote(FText::FromString(_Quote),
                             FText::FromString(_Author));
-    FVector2D GoodSize = WindowContent->GetQuotationSize(SlateWindowWP);
-    SlateWindow->Resize(GoodSize);
   }
 }
+
 bool FMAQHelper::CanDisplayQuote() {
 
   auto SlateWindow = SlateWindowWP.Pin();
@@ -96,8 +106,9 @@ void FMAQHelper::DisplayQuote() {
     FString AuthorPretty =
         FString::Format(TEXT("{0}{1}{0}"), {"~", *Quote.author});
 
-    UpdateWindowQuote(Quote.quote, AuthorPretty);
 
+	UpdateWindowQuote(Quote.quote, AuthorPretty);
+    UpdateWindowSize();
     if (SlateWindow.IsValid()) {
 
       SlateWindow->ShowWindow();

@@ -32,6 +32,7 @@ private:
 
   bool CanDisplayQuote();
   void DisplayQuote();
+  void UpdateWindowSize();
   void UpdateWindowQuote(const FString &_Quote, const FString &_Author);
   void KillWindow();
 
