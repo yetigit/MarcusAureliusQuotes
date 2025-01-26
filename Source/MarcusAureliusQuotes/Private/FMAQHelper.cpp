@@ -66,13 +66,6 @@ void FMAQHelper::CreateSlateWindow() {
           .ShouldPreserveAspectRatio(false)[WindowContent.ToSharedRef()];
   SlateWindowWP = SlateWindow;
   FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef());
-#if 0
-  if (SlateWindow.IsValid()) {
-    SlateWindow->ShowWindow();
-    FVector2D GoodSize = WindowContent->GetQuotationSize();
-    SlateWindow->Resize(GoodSize);
-  }
-#endif
 }
 
 void FMAQHelper::UpdateWindowQuote(const FString &_Quote,
@@ -82,13 +75,7 @@ void FMAQHelper::UpdateWindowQuote(const FString &_Quote,
   if (SlateWindow.IsValid() && WindowContent.IsValid()) {
     WindowContent->SetQuote(FText::FromString(_Quote),
                             FText::FromString(_Author));
-    FVector2D GoodSize = WindowContent->GetQuotationSize();
-#if 1
-    auto TitleBarSize = SlateWindow->GetTitleBarSize();
-    if (TitleBarSize.IsSet()) {
-      GoodSize.Y += TitleBarSize.Get();
-    }
-#endif
+    FVector2D GoodSize = WindowContent->GetQuotationSize(SlateWindowWP);
     SlateWindow->Resize(GoodSize);
   }
 }

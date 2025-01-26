@@ -18,6 +18,8 @@ for the quote display
 * [x] auto size the window based on its content upon displayquote()
 * [x] better window size for the quote display
 * [] add custom CLOSE button (which will hide the window only)
+* [] Have one widget for the quotation, author name will be appended to quote
+text with "\n\n--" suffix
 */
 
 #include "MarcusAureliusQuotesLog.h"
