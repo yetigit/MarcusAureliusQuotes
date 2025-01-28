@@ -6,19 +6,22 @@
 
 void SMAQuoteWidget::Construct(const FArguments& InArgs)
 {
+   // TODO: pass wrapAt magic value (default width of the window) in Args
+  const float AppScale = FSlateApplication::Get().GetApplicationScale();
   ChildSlot
   [
     SNew(SVerticalBox)
     +SVerticalBox::Slot()
     .AutoHeight()
     .VAlign(VAlign_Fill)
-    .HAlign(HAlign_Fill)
-    .Padding(FMargin(10.f, 0, 0, 10.f))
+    .HAlign(HAlign_Center)
+    .Padding(FMargin(10. * AppScale, 10., 10. * AppScale, 10.))
     [
       SAssignNew(QuoteWidget, STextBlock)
       .Text(FText::FromString(TEXT(
         "That which isn’t good for the hive, isn’t good for the bee."
       )))
+	  .WrapTextAt(520. * AppScale)
       .AutoWrapText(true)
       .ColorAndOpacity(FLinearColor::White)
       .Font(FCoreStyle::GetDefaultFontStyle("Regular", 16))
@@ -28,12 +31,11 @@ void SMAQuoteWidget::Construct(const FArguments& InArgs)
     .AutoHeight()
     .VAlign(VAlign_Fill)
     .HAlign(HAlign_Center)
-    .Padding(FMargin(0, 0, 0, 10.f))
+    .Padding(FMargin(0., 0., 0., 20.))
     [
       SAssignNew(AuthorWidget, STextBlock)
       .Text(FText::FromString(TEXT(
-        "-- Marcus Aurelius"
-      )))
+        "── Marcus Aurelius")))
       .ColorAndOpacity(FLinearColor::White)
       .Font(FCoreStyle::GetDefaultFontStyle("Regular", 16))
       .Justification(ETextJustify::Center)

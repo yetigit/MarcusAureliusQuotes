@@ -25,6 +25,7 @@ public class MarcusAureliusQuotes : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
+"ApplicationCore",
         "Core",
         "CoreUObject",
         "Engine",
@@ -39,6 +40,7 @@ public class MarcusAureliusQuotes : ModuleRules
 			new string[]
 			{
         "UnrealEd",
+        "LevelEditor",
         "Slate",
         "SlateCore"
 				// ... add private dependencies that you statically link with here ...	

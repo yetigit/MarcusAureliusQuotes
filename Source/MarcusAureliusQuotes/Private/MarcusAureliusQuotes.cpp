@@ -17,8 +17,7 @@ for the quote display
 * [x] use plugin log instead of LogTemp
 * [x] auto size the window based on its content upon displayquote()
 * [x] better window size for the quote display
-* [] have the window appear in the corner of the viewport
-* [] prevent the window from stealing focus on show()
+* [x] have the window appear in the corner of the viewport
 * [] the window should not be native, it should stay in the engine
 * [] when the user click something or is in the middle of viewport interaction
 * the window remains showing and unfocused (on top of unreal only).
@@ -36,19 +35,19 @@ void FMarcusAureliusQuotesModule::StartupModule() {
 
   QuoteManager_ = MakeShared<FMAQHelper>();
 
-  QuoteManager_->SetRequestTimeout(30.f);
-  const float ticksEvery = 9.f;
-  const float windowFadesAfter = ticksEvery * 0.7f;
-  QuoteManager_->QuoteTick_ = ticksEvery;
-  QuoteManager_->WindowLifetime_ = windowFadesAfter;
-  QuoteManager_->NumQuotes_ = 99;
-
   QuoteManager_->QuotesReset();
-  QuoteManager_->CreateSlateWindow();
 
-  bool bSuccessfulFetch = QuoteManager_->FetchQuotes();
+  QuoteManager_->NumQuotes_ = 99;
+  QuoteManager_->SetRequestTimeout(30.f);
+  if (!QuoteManager_->FetchQuotes())
+  {
+    UE_LOG(LogMarcusAureliusQuotes, Error, TEXT("Failed to fetch quotes"));
+  }
 
+  // TODO: create window own tick event
+  
   QuoteManager_->AddTicker();
+
 }
 
 void FMarcusAureliusQuotesModule::ShutdownModule() {

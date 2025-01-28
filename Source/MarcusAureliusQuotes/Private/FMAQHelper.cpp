@@ -1,5 +1,7 @@
 #include "FMAQHelper.h"
 #include "Editor.h"
+#include "LevelEditor.h"
+#include "SLevelViewport.h"
 
 #include "HttpModule.h"
 #include "Serialization/JsonSerializer.h"
@@ -8,8 +10,10 @@
 #include "SMAQuoteWidget.h"
 
 #include "TimerManager.h"
-#include "MarcusAureliusQuotesLog.h"
 
+#include "HAL/PlatformApplicationMisc.h"
+
+#include "MarcusAureliusQuotesLog.h"
 /*
  * NOTE:
  * binds:
@@ -19,10 +23,17 @@
 */
 
 FMAQHelper::FMAQHelper() {
-  QuoteTick_ = 8.f;
-  WindowLifetime_ = QuoteTick_ * 0.7f;
-  bQuoteFetched_ = false;
+  this->SetDefaults();
+}
+
+void FMAQHelper::SetDefaults() {
   NumQuotes_ = 99;
+  QuoteTick_ = 9.f;
+  WindowLifetime_ = QuoteTick_ * 0.7f;
+  DefaultWindowPos_ = FVector2D::ZeroVector;
+  bDefaultWindowPosSet_ = false;
+  bQuoteFetched_ = false;
+  bWindowWasEverCreated_ = false;
 }
 
 FMAQHelper::~FMAQHelper() { this->FreeResources(); }
@@ -48,15 +59,70 @@ void FMAQHelper::KillWindow() {
   }
 }
 
+void FMAQHelper::RegisterGetVpPosDelegate() {
+
+  FLevelEditorModule &LevelEditorModule =
+      FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
+
+  LevelVpPosDelegateHandle_ = LevelEditorModule.OnLevelEditorCreated().AddSP(
+      AsShared(), &FMAQHelper::GetViewportPosition);
+}
+
+void FMAQHelper::DeregisterGetVpPosDelegate() {
+
+  FLevelEditorModule &LevelEditorModule =
+      FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
+
+  LevelEditorModule.OnLevelEditorCreated().Remove(LevelVpPosDelegateHandle_);
+}
+
+void FMAQHelper::GetViewportPosition(TSharedPtr<ILevelEditor> InLevelEditor) {
+
+  if (!InLevelEditor.IsValid())
+    return;
+
+  TSharedPtr<SLevelViewport> ActiveLevelViewport =
+      InLevelEditor->GetActiveViewportInterface();
+  if (!ActiveLevelViewport.IsValid())
+    return;
+
+  TWeakPtr<SViewport> ViewportWidgetWP =
+      ActiveLevelViewport->GetViewportWidget();
+  if (auto ViewportWidget = ViewportWidgetWP.Pin()) {
+    const FGeometry &VPGeo = ViewportWidget->GetTickSpaceGeometry();
+    const FVector2D GeoPosition = VPGeo.GetAbsolutePosition();
+    const FVector2D GeoSize = VPGeo.GetAbsoluteSize();
+    const FVector2D Padd(20, 20);
+    float x = GeoPosition.X + GeoSize.X - Padd.X;
+    float y = GeoPosition.Y + (GeoSize.Y / 2);
+    FVector2D Result(x, y);
+    FString ResultStr = Result.ToString();
+    UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Viewport pos = %s"),
+           *ResultStr);
+    DefaultWindowPos_ = Result;
+    bDefaultWindowPosSet_ = true;
+    CreateSlateWindow();
+  }
+}
+
 void FMAQHelper::CreateSlateWindow() {
 
   TSharedPtr<SMAQuoteWidget> WindowContent = SNew(SMAQuoteWidget);
   WindowContentWP = WindowContent;
+
+  const float AppScale = FSlateApplication::Get().GetApplicationScale();
+  const float DpiScaleFactor =
+      FPlatformApplicationMisc::GetDPIScaleFactorAtPoint(DefaultWindowPos_.X,
+                                                         DefaultWindowPos_.Y);
+  UE_LOG(LogMarcusAureliusQuotes, Warning,
+         TEXT("app scale = %f, dpi scale = %f"), AppScale, DpiScaleFactor);
+  FVector2D DefaultSize(530.f * AppScale, 600.f * AppScale);
+
   TSharedPtr<SWindow> SlateWindow =
       SNew(SWindow)
           .Title(FText::FromString(TEXT("Quote")))
-          .ClientSize(FVector2D(2000, 2000))
-          .ScreenPosition(FVector2D(2000, 2000))
+          .ClientSize(DefaultSize)
+          .ScreenPosition(DefaultWindowPos_ - FVector2D(DefaultSize.X, 0.0))
           .SupportsMaximize(false)
           .SupportsMinimize(false)
 
@@ -67,16 +133,35 @@ void FMAQHelper::CreateSlateWindow() {
           .ShouldPreserveAspectRatio(false)[WindowContent.ToSharedRef()];
   SlateWindowWP = SlateWindow;
   FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef(), false);
+  bWindowWasEverCreated_ = true;
 }
 
-void FMAQHelper::UpdateWindowSize()
-{
-	auto SlateWindow = SlateWindowWP.Pin();
-	SlateWindow->SlatePrepass( FSlateApplicationBase::Get().GetApplicationScale() * SlateWindow->GetDPIScaleFactor());
-	const FVector2f WindowDesiredSizePixels = SlateWindow->GetDesiredSize();
-	FVector2d WPos = SlateWindow->GetPositionInScreen();
-	SlateWindow->ReshapeWindow(WPos, WindowDesiredSizePixels);
-	SlateWindow->SetCachedSize(WindowDesiredSizePixels);
+void FMAQHelper::UpdateWindowSize() {
+
+  if (auto SlateWindow = SlateWindowWP.Pin()) {
+
+    const float DpiScaleFactor = SlateWindow->GetDPIScaleFactor();
+    FVector2D WPos = SlateWindow->GetPositionInScreen();
+    SlateWindow->SlatePrepass(
+        FSlateApplicationBase::Get().GetApplicationScale() * DpiScaleFactor);
+    const FVector2D WNewSize = SlateWindow->GetDesiredSize();
+    FVector2D WRightBottomCorner = WPos + WNewSize;
+    bool MoveIt = false;
+    if(WRightBottomCorner.X > DefaultWindowPos_.X)
+    {
+      const float Offset = WRightBottomCorner.X - DefaultWindowPos_.X;
+      WPos.X -= Offset;
+      MoveIt = true;
+    }
+
+    SlateWindow->ReshapeWindow(WPos, WNewSize);
+    if(MoveIt)
+    {
+      SlateWindow->SetCachedScreenPosition(WPos);
+    }
+    SlateWindow->SetCachedSize(WNewSize);
+
+  }
 }
 
 void FMAQHelper::UpdateWindowQuote(const FString &_Quote,
@@ -103,11 +188,10 @@ void FMAQHelper::DisplayQuote() {
     auto WindowContent = WindowContentWP.Pin();
     FMAQuote && Quote = Quotes.Pop(true);
 
-    FString AuthorPretty =
-        FString::Format(TEXT("{0}{1}{0}"), {"~", *Quote.author});
+    FString AuthorPretty = 
+        FString::Format(TEXT("{0} {1}"), {TEXT("──"), *Quote.author});
 
-
-	UpdateWindowQuote(Quote.quote, AuthorPretty);
+    UpdateWindowQuote(Quote.quote, AuthorPretty);
     UpdateWindowSize();
     if (SlateWindow.IsValid()) {
 
@@ -145,8 +229,23 @@ void FMAQHelper::AddTicker() {
 
 bool FMAQHelper::Tick(float DeltaTime) {
 
+  // TODO: make the window on a separate tick, 
+  // this tick is for quote display only
+  if(!bWindowWasEverCreated_)
+  {
+    FLevelEditorModule &LevelEditorModule =
+      FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
+    GetViewportPosition(LevelEditorModule.GetFirstLevelEditor());
+  }
+
+  if(!bWindowWasEverCreated_)
+  {
+    UE_LOG(LogMarcusAureliusQuotes, Error, TEXT("Failed to initialize window"));
+    return true;
+  }
+
   auto SlateWindow = SlateWindowWP.Pin();
-  auto WindowContent = WindowContentWP.Pin();
+
   if(!SlateWindow.IsValid())
   {
     // Window has been destroyed, we re-create
@@ -222,6 +321,7 @@ void FMAQHelper::OnResponseReceived(FHttpRequestPtr Request,
   };
 
   auto OnSuccess = [this](const TArray<TSharedPtr<FJsonValue>> &JsonArray) {
+    Quotes.Reserve(NumQuotes_);
     for (const auto &JsonVal : JsonArray) {
       auto &CurrentDict = JsonVal->AsObject();
 

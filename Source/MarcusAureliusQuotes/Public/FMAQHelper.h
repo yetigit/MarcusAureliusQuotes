@@ -25,7 +25,14 @@ public:
   void QuotesReset();
   void AddTicker();
 
+
+  void RegisterGetVpPosDelegate();
+
 private:
+  void DeregisterGetVpPosDelegate();
+  void GetViewportPosition(TSharedPtr<class ILevelEditor> InLevelEditor);
+
+
   bool Tick(float);
   void OnResponseReceived(FHttpRequestPtr, FHttpResponsePtr,
                           bool bWasSuccessful);
@@ -36,8 +43,11 @@ private:
   void UpdateWindowQuote(const FString &_Quote, const FString &_Author);
   void KillWindow();
 
+  void SetDefaults();
+
 private:
   FTSTicker::FDelegateHandle TickerHandle;
+  FDelegateHandle LevelVpPosDelegateHandle_;
   TArray<FMAQuote> Quotes;
 
   TWeakPtr<SWindow> SlateWindowWP;
@@ -48,6 +58,9 @@ public:
   unsigned NumQuotes_;
   float QuoteTick_;
   float WindowLifetime_;
+  FVector2D DefaultWindowPos_;
+  bool bDefaultWindowPosSet_;
 private:
   bool bQuoteFetched_;
+  bool bWindowWasEverCreated_;
 };
