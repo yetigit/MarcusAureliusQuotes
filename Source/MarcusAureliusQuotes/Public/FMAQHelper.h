@@ -21,16 +21,14 @@ public:
 public:
   bool FetchQuotes();
   void PrintAllQuotes(int Num, bool bFromBottom);
-  void CreateSlateWindow();
   void QuotesReset();
-  void AddTicker();
+  void InitQuoteTickers();
 
 
-  void RegisterGetVpPosDelegate();
 
 private:
-  void DeregisterGetVpPosDelegate();
-  void GetViewportPosition(TSharedPtr<class ILevelEditor> InLevelEditor);
+  void CreateSlateWindow();
+  void InitQuoteWindow(TSharedPtr<class ILevelEditor> InLevelEditor);
 
 
   bool Tick(float);
@@ -44,9 +42,11 @@ private:
   void KillWindow();
 
   void SetDefaults();
+  void OnWorldTickStart(UWorld*, ELevelTick TickType, float DeltaTime);
 
 private:
-  FTSTicker::FDelegateHandle TickerHandle;
+  FDelegateHandle MakeWindowTicker_;
+  FTSTicker::FDelegateHandle QuoteTicker_;
   FDelegateHandle LevelVpPosDelegateHandle_;
   TArray<FMAQuote> Quotes;
 

@@ -45,7 +45,8 @@ void FMAQHelper::FreeResources() {
   KillWindow();
   QuotesReset();
   if (GEngine) {
-    FTSTicker::GetCoreTicker().RemoveTicker(TickerHandle);
+    FWorldDelegates::OnWorldTickStart.Remove(MakeWindowTicker_);
+    FTSTicker::GetCoreTicker().RemoveTicker(QuoteTicker_);
   }
 }
 
@@ -59,24 +60,20 @@ void FMAQHelper::KillWindow() {
   }
 }
 
-void FMAQHelper::RegisterGetVpPosDelegate() {
-
-  FLevelEditorModule &LevelEditorModule =
-      FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
-
-  LevelVpPosDelegateHandle_ = LevelEditorModule.OnLevelEditorCreated().AddSP(
-      AsShared(), &FMAQHelper::GetViewportPosition);
+void FMAQHelper::OnWorldTickStart(UWorld*, ELevelTick TickType, float DeltaTime)
+{
+  if (GEditor && !GEditor->PlayWorld)
+  {
+    if(!bWindowWasEverCreated_)
+    {
+      FLevelEditorModule &LevelEditorModule =
+        FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
+      InitQuoteWindow(LevelEditorModule.GetFirstLevelEditor());
+    }
+  }
 }
 
-void FMAQHelper::DeregisterGetVpPosDelegate() {
-
-  FLevelEditorModule &LevelEditorModule =
-      FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
-
-  LevelEditorModule.OnLevelEditorCreated().Remove(LevelVpPosDelegateHandle_);
-}
-
-void FMAQHelper::GetViewportPosition(TSharedPtr<ILevelEditor> InLevelEditor) {
+void FMAQHelper::InitQuoteWindow(TSharedPtr<ILevelEditor> InLevelEditor) {
 
   if (!InLevelEditor.IsValid())
     return;
@@ -221,22 +218,17 @@ void FMAQHelper::DisplayQuote() {
   }
 }
 
-void FMAQHelper::AddTicker() {
+void FMAQHelper::InitQuoteTickers() {
 
-  TickerHandle = FTSTicker::GetCoreTicker().AddTicker(
+  MakeWindowTicker_ = FWorldDelegates::OnWorldTickStart.AddSP(
+      AsShared(), &FMAQHelper::OnWorldTickStart);
+
+  QuoteTicker_ = FTSTicker::GetCoreTicker().AddTicker(
       FTickerDelegate::CreateSP(AsShared(), &FMAQHelper::Tick), QuoteTick_);
 }
 
 bool FMAQHelper::Tick(float DeltaTime) {
 
-  // TODO: make the window on a separate tick, 
-  // this tick is for quote display only
-  if(!bWindowWasEverCreated_)
-  {
-    FLevelEditorModule &LevelEditorModule =
-      FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
-    GetViewportPosition(LevelEditorModule.GetFirstLevelEditor());
-  }
 
   if(!bWindowWasEverCreated_)
   {

@@ -44,9 +44,8 @@ void FMarcusAureliusQuotesModule::StartupModule() {
     UE_LOG(LogMarcusAureliusQuotes, Error, TEXT("Failed to fetch quotes"));
   }
 
-  // TODO: create window own tick event
   
-  QuoteManager_->AddTicker();
+  QuoteManager_->InitQuoteTickers();
 
 }
 
