@@ -6,7 +6,7 @@
 
 void SMAQuoteWidget::Construct(const FArguments& InArgs)
 {
-   // TODO: pass wrapAt magic value (default width of the window) in Args
+  const FVector2D IntendedScreenSize = InArgs._DefaultWScreenSize;
   const float AppScale = FSlateApplication::Get().GetApplicationScale();
   ChildSlot
   [
@@ -21,7 +21,7 @@ void SMAQuoteWidget::Construct(const FArguments& InArgs)
       .Text(FText::FromString(TEXT(
         "That which isn’t good for the hive, isn’t good for the bee."
       )))
-	  .WrapTextAt(520. * AppScale)
+	  .WrapTextAt(IntendedScreenSize.X)
       .AutoWrapText(true)
       .ColorAndOpacity(FLinearColor::White)
       .Font(FCoreStyle::GetDefaultFontStyle("Regular", 16))

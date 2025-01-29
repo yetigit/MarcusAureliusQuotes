@@ -11,13 +11,13 @@ on top without changing the focus
 * [x] the author text should lign up on the vertical
 * [x] if the window is closed/destroyed upon quote display it must be recreated
 for the quote display
-* [] a picture of the author should appear with the quote and his name
 * [x] the window should not be separate from the editor in the taskbar
-* [] progress bar for fetching quotes
 * [x] use plugin log instead of LogTemp
 * [x] auto size the window based on its content upon displayquote()
 * [x] better window size for the quote display
 * [x] have the window appear in the corner of the viewport
+* [] a picture of the author should appear with the quote and his name
+* [] progress bar for fetching quotes
 * [] the window should not be native, it should stay in the engine
 * [] when the user click something or is in the middle of viewport interaction
 * the window remains showing and unfocused (on top of unreal only).

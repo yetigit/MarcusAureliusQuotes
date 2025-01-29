@@ -94,8 +94,10 @@ void FMAQHelper::InitQuoteWindow(TSharedPtr<ILevelEditor> InLevelEditor) {
     float y = GeoPosition.Y + (GeoSize.Y / 2);
     FVector2D Result(x, y);
     FString ResultStr = Result.ToString();
+#if 0
     UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Viewport pos = %s"),
            *ResultStr);
+#endif
     DefaultWindowPos_ = Result;
     bDefaultWindowPosSet_ = true;
     CreateSlateWindow();
@@ -104,22 +106,26 @@ void FMAQHelper::InitQuoteWindow(TSharedPtr<ILevelEditor> InLevelEditor) {
 
 void FMAQHelper::CreateSlateWindow() {
 
-  TSharedPtr<SMAQuoteWidget> WindowContent = SNew(SMAQuoteWidget);
-  WindowContentWP = WindowContent;
-
   const float AppScale = FSlateApplication::Get().GetApplicationScale();
   const float DpiScaleFactor =
       FPlatformApplicationMisc::GetDPIScaleFactorAtPoint(DefaultWindowPos_.X,
                                                          DefaultWindowPos_.Y);
+#if 0
   UE_LOG(LogMarcusAureliusQuotes, Warning,
          TEXT("app scale = %f, dpi scale = %f"), AppScale, DpiScaleFactor);
-  FVector2D DefaultSize(530.f * AppScale, 600.f * AppScale);
+#endif
+
+  FVector2D DefaultScreenSize(530.f * AppScale, 600.f * AppScale);
+
+  TSharedPtr<SMAQuoteWidget> WindowContent =
+      SNew(SMAQuoteWidget).DefaultWScreenSize(DefaultScreenSize);
+  WindowContentWP = WindowContent;
 
   TSharedPtr<SWindow> SlateWindow =
       SNew(SWindow)
           .Title(FText::FromString(TEXT("Quote")))
-          .ClientSize(DefaultSize)
-          .ScreenPosition(DefaultWindowPos_ - FVector2D(DefaultSize.X, 0.0))
+          .ClientSize(DefaultScreenSize)
+		  .ScreenPosition({0., 0.})
           .SupportsMaximize(false)
           .SupportsMinimize(false)
 
@@ -129,6 +135,9 @@ void FMAQHelper::CreateSlateWindow() {
           .IsPopupWindow(false)
           .ShouldPreserveAspectRatio(false)[WindowContent.ToSharedRef()];
   SlateWindowWP = SlateWindow;
+  // NOTE: you have to force it, unreal will place it in the center 
+  // despite the position set in the construct args
+  SlateWindow->MoveWindowTo(DefaultWindowPos_ - FVector2D(DefaultScreenSize.X, 0.));
   FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef(), false);
   bWindowWasEverCreated_ = true;
 }
