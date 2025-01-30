@@ -1,5 +1,6 @@
 #include "FMAQHelper.h"
 #include "Editor.h"
+#include "Editor/MainFrame/Public/Interfaces/IMainFrameModule.h"
 #include "LevelEditor.h"
 #include "SLevelViewport.h"
 
@@ -138,7 +139,17 @@ void FMAQHelper::CreateSlateWindow() {
   // NOTE: you have to force it, unreal will place it in the center 
   // despite the position set in the construct args
   SlateWindow->MoveWindowTo(DefaultWindowPos_ - FVector2D(DefaultScreenSize.X, 0.));
-  FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef(), false);
+
+  TSharedPtr<SWindow> ParentWindow =
+      FModuleManager::LoadModuleChecked<IMainFrameModule>("MainFrame")
+          .GetParentWindow();
+  if (ParentWindow.IsValid()) {
+    FSlateApplication::Get().AddWindowAsNativeChild(
+        SlateWindow.ToSharedRef(), ParentWindow.ToSharedRef(), false);
+  } else {
+    FSlateApplication::Get().AddWindow(SlateWindow.ToSharedRef(), false);
+  }
+
   bWindowWasEverCreated_ = true;
 }
 
@@ -296,7 +307,7 @@ void FMAQHelper::SetRequestTimeout(const float _HowLong) {
 
 bool FMAQHelper::FetchQuotes() {
   // int NumberOfQuotes = NumQuotes_;
-  FString Url = {"https://stoic-quotes.com/api/quotes?num="};
+  FString Url = TEXT("https://stoic-quotes.com/api/quotes?num=");
   Url += FString::FromInt(NumQuotes_);
 
   UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Fetching quotes.. ."));

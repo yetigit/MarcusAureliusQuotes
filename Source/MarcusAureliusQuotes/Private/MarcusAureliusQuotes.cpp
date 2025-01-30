@@ -17,8 +17,7 @@ for the quote display
 * [x] better window size for the quote display
 * [x] have the window appear in the corner of the viewport
 * [] a picture of the author should appear with the quote and his name
-* [] progress bar for fetching quotes
-* [] the window should not be native, it should stay in the engine
+* [x] the window should not be native, it should stay in the engine
 * [] when the user click something or is in the middle of viewport interaction
 * the window remains showing and unfocused (on top of unreal only).
 * - we cannot make it a popup window because a popup cannot be moved
