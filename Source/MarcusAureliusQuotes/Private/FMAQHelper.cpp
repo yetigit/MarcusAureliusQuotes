@@ -10,6 +10,8 @@
 
 #include "SMAQuoteWidget.h"
 
+#include "SMAQWindow.h"
+
 #include "TimerManager.h"
 
 #include "HAL/PlatformApplicationMisc.h"
@@ -216,7 +218,8 @@ void FMAQHelper::DisplayQuote() {
 
       // NOTE: if window is top-most this will
       // happen on ShowWindow()
-      SlateWindow->BringToFront(); 
+      StaticCastSharedPtr<SMAQWindow>(SlateWindow)->BringToFront();
+      // SlateWindow->BringToFront(); 
 
       GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
       auto &SlateWindowWeak = this->SlateWindowWP;
