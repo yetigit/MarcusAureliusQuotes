@@ -4,25 +4,9 @@
 #include "FMAQHelper.h"
 
 /*
-* TODO:
-* [x] the window must not focus when the quote gets displayed, but it must stay
-on top without changing the focus
-* [x] the window must disapear after X amount of seconds
-* [x] the author text should lign up on the vertical
-* [x] if the window is closed/destroyed upon quote display it must be recreated
-for the quote display
-* [x] the window should not be separate from the editor in the taskbar
-* [x] use plugin log instead of LogTemp
-* [x] auto size the window based on its content upon displayquote()
-* [x] better window size for the quote display
-* [x] have the window appear in the corner of the viewport
-* [] a picture of the author should appear with the quote and his name
-* [x] the window should not be native, it should stay in the engine
-* [x] when the user click something or is in the middle of viewport interaction
-* the window remains showing and unfocused (on top of unreal only).
-* - we cannot make it a popup window because a popup cannot be moved
-* - a popup does not have a close button
-*/
+ * TODO:
+ * [] a picture of the author should appear with the quote and his name
+ */
 
 #include "MarcusAureliusQuotesLog.h"
 
