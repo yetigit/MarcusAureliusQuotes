@@ -123,12 +123,13 @@ void FMAQHelper::CreateSlateWindow() {
   TSharedPtr<SMAQuoteWidget> WindowContent =
       SNew(SMAQuoteWidget).DefaultWScreenSize(DefaultScreenSize);
   WindowContentWP = WindowContent;
-
-  TSharedPtr<SWindow> SlateWindow =
-      SNew(SWindow)
-          .Title(FText::FromString(TEXT("Quote")))
+  auto title = FText::FromString(TEXT("Quote"));
+  FVector2D vv = { 0., 0. };
+  TSharedPtr<SWindow> SlateWindow_;
+      SAssignNew(SlateWindow_, SWindow)
+          .Title(title)
           .ClientSize(DefaultScreenSize)
-		  .ScreenPosition({0., 0.})
+		  .ScreenPosition(vv)
           .SupportsMaximize(false)
           .SupportsMinimize(false)
 
@@ -137,11 +138,13 @@ void FMAQHelper::CreateSlateWindow() {
           .ActivationPolicy(EWindowActivationPolicy::Never)
           .IsPopupWindow(false)
           .ShouldPreserveAspectRatio(false)[WindowContent.ToSharedRef()];
+  auto SlateWindow = StaticCastSharedPtr<SMAQWindow>(SlateWindow_);
   SlateWindowWP = SlateWindow;
   // NOTE: you have to force it, unreal will place it in the center 
   // despite the position set in the construct args
   SlateWindow->MoveWindowTo(DefaultWindowPos_ - FVector2D(DefaultScreenSize.X, 0.));
 
+#if 1
   TSharedPtr<SWindow> ParentWindow =
       FModuleManager::LoadModuleChecked<IMainFrameModule>("MainFrame")
           .GetParentWindow();
@@ -153,6 +156,7 @@ void FMAQHelper::CreateSlateWindow() {
   }
 
   bWindowWasEverCreated_ = true;
+#endif
 }
 
 void FMAQHelper::UpdateWindowSize() {

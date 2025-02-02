@@ -10,6 +10,7 @@
 #include "Json.h"
 
 #include "Framework/Application/SlateApplication.h"
+#include "SMAQWindow.h"
 
 class FMAQHelper : public TSharedFromThis<FMAQHelper> {
 public:
@@ -50,7 +51,7 @@ private:
   FDelegateHandle LevelVpPosDelegateHandle_;
   TArray<FMAQuote> Quotes;
 
-  TWeakPtr<SWindow> SlateWindowWP;
+  TWeakPtr<class SMAQWindow> SlateWindowWP;
   TWeakPtr<class SMAQuoteWidget> WindowContentWP;
   FTimerHandle AutoHideTimerHandle;
 
