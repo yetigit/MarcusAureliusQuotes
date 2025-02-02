@@ -18,7 +18,7 @@ for the quote display
 * [x] have the window appear in the corner of the viewport
 * [] a picture of the author should appear with the quote and his name
 * [x] the window should not be native, it should stay in the engine
-* [] when the user click something or is in the middle of viewport interaction
+* [x] when the user click something or is in the middle of viewport interaction
 * the window remains showing and unfocused (on top of unreal only).
 * - we cannot make it a popup window because a popup cannot be moved
 * - a popup does not have a close button

@@ -15,6 +15,16 @@
 #include "HAL/PlatformApplicationMisc.h"
 
 #include "MarcusAureliusQuotesLog.h"
+
+#if 0
+
+// TODO: make it so that the plugin only compiles on windows
+// NOTE: this plugin only compiles for windows
+#define _AMD64_
+#define WIN32_LEAN_AND_MEAN
+#include <windef.h>
+#include <winuser.h>
+#endif
 /*
  * NOTE:
  * binds:
@@ -132,7 +142,7 @@ void FMAQHelper::CreateSlateWindow() {
 
           .IsTopmostWindow(false)
           .FocusWhenFirstShown(false)
-          .ActivationPolicy(EWindowActivationPolicy::Never)
+          .ActivationPolicy(EWindowActivationPolicy::Never) /* does not work */
           .IsPopupWindow(false)
           .ShouldPreserveAspectRatio(false)[WindowContent.ToSharedRef()];
   SlateWindowWP = SlateWindow;
@@ -144,6 +154,8 @@ void FMAQHelper::CreateSlateWindow() {
       FModuleManager::LoadModuleChecked<IMainFrameModule>("MainFrame")
           .GetParentWindow();
   if (ParentWindow.IsValid()) {
+    // NOTE: when the window is attached to the application there is no need to
+    // bring it to front
     FSlateApplication::Get().AddWindowAsNativeChild(
         SlateWindow.ToSharedRef(), ParentWindow.ToSharedRef(), false);
   } else {
@@ -214,9 +226,19 @@ void FMAQHelper::DisplayQuote() {
 
       SlateWindow->ShowWindow();
 
+#if 0
+      HWND w = static_cast<HWND>(
+          SlateWindow->GetNativeWindow()->GetOSWindowHandle());
+      HWND HWndInsertAfter = HWND_TOP;
+      uint32 Flags =
+          SWP_NOMOVE | SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOACTIVATE;
+
+      ::SetWindowPos(w, HWndInsertAfter, 0, 0, 0, 0, Flags);
+#endif
+
       // NOTE: if window is top-most this will
       // happen on ShowWindow()
-      SlateWindow->BringToFront(); 
+      // SlateWindow->BringToFront(); 
 
       GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
       auto &SlateWindowWeak = this->SlateWindowWP;
