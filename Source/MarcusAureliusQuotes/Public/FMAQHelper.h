@@ -49,7 +49,6 @@ private:
 private:
   FDelegateHandle MakeWindowTicker_;
   FTSTicker::FDelegateHandle QuoteTicker_;
-  FDelegateHandle LevelVpPosDelegateHandle_;
   TArray<FMAQuote> Quotes;
 
   TWeakPtr<SWindow> SlateWindowWP;
@@ -61,11 +60,12 @@ public:
   unsigned NumQuotes_;
   float QuoteTick_;
   float WindowLifetime_;
-  FVector2D DefaultWindowPos_;
-  bool bDefaultWindowPosSet_;
 private:
   TSharedPtr<FSlateBrush> CachedAuthorImgBrush;
   TObjectPtr<UTexture2D> CachedTexture;
+  FVector2D DefaultWindowPos_;
+  FVector2D InitVpSize_;
+  bool bDefaultWindowPosSet_;
   bool bQuoteFetched_;
   bool bWindowWasEverCreated_;
 };

@@ -7,9 +7,11 @@ class SMAQuoteWidget : public SCompoundWidget
 public:
   SLATE_BEGIN_ARGS(SMAQuoteWidget)
 : 
-	_DefaultWScreenSize(FVector2D::ZeroVector)
+	_DefaultWScreenSize(FVector2D::ZeroVector),
+	_DefaultAuthorImgRes(FSlateApplication::Get().GetApplicationScale() * 64.0f)
   {}
   SLATE_ARGUMENT(FVector2D, DefaultWScreenSize)
+  SLATE_ARGUMENT(float, DefaultAuthorImgRes)
   SLATE_END_ARGS()
 
   void Construct(const FArguments& InArgs);

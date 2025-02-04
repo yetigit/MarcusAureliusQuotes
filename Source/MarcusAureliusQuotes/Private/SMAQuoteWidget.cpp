@@ -9,6 +9,7 @@
 void SMAQuoteWidget::Construct(const FArguments& InArgs)
 {
   const FVector2D IntendedScreenSize = InArgs._DefaultWScreenSize;
+  const float DefaultAuthorImgRes = InArgs._DefaultAuthorImgRes;
   const float AppScale = FSlateApplication::Get().GetApplicationScale();
   ChildSlot
   [
@@ -17,6 +18,7 @@ void SMAQuoteWidget::Construct(const FArguments& InArgs)
     .AutoWidth()
     .VAlign(VAlign_Top)
     .HAlign(HAlign_Center)
+	.Padding(FMargin(5,0,5,0))
     [
 		SAssignNew(AuthorImgWidget, SImage)
     ]
@@ -36,7 +38,7 @@ void SMAQuoteWidget::Construct(const FArguments& InArgs)
         .Text(FText::FromString(TEXT(
           "That which isn’t good for the hive, isn’t good for the bee."
         )))
-      .WrapTextAt(IntendedScreenSize.X)
+      .WrapTextAt(IntendedScreenSize.X + DefaultAuthorImgRes)
         .AutoWrapText(true)
         .ColorAndOpacity(FLinearColor::White)
         .Font(FCoreStyle::GetDefaultFontStyle("Regular", 16))

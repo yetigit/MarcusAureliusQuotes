@@ -45,6 +45,7 @@ void FMAQHelper::SetDefaults() {
   QuoteTick_ = 9.f;
   WindowLifetime_ = QuoteTick_ * 0.7f;
   DefaultWindowPos_ = FVector2D::ZeroVector;
+  InitVpSize_ = FVector2D(1000, 1000);
   bDefaultWindowPosSet_ = false;
   bQuoteFetched_ = false;
   bWindowWasEverCreated_ = false;
@@ -127,6 +128,7 @@ void FMAQHelper::InitQuoteWindow(TSharedPtr<ILevelEditor> InLevelEditor) {
            *ResultStr);
 #endif
     DefaultWindowPos_ = Result;
+    InitVpSize_ = GeoSize;
     bDefaultWindowPosSet_ = true;
     CreateSlateWindow();
   }
@@ -143,10 +145,19 @@ void FMAQHelper::CreateSlateWindow() {
          TEXT("app scale = %f, dpi scale = %f"), AppScale, DpiScaleFactor);
 #endif
 
-  FVector2D DefaultScreenSize(( 530.f + 60. ) * AppScale, 600.f * AppScale);
+  // NOTE:
+  // - window size ratio is 3/4
+  // - based on tests we want the X value to occupy about 1/4 of the VP size X
+  const float InitWinSizeX = FMath::Max(200.f, float(InitVpSize_.X) * 0.24f * AppScale);
+  const float InitWinSizeY = InitWinSizeX / 0.75f;
+  const FVector2D DefaultScreenSize = FVector2D(InitWinSizeX, InitWinSizeY);
+  const float DefaultAuthorImgRes = 64.f * AppScale;
 
   TSharedPtr<SMAQuoteWidget> WindowContent =
-      SNew(SMAQuoteWidget).DefaultWScreenSize(DefaultScreenSize);
+      SNew(SMAQuoteWidget)
+      .DefaultWScreenSize(DefaultScreenSize)
+      .DefaultAuthorImgRes(DefaultAuthorImgRes);
+
   WindowContentWP = WindowContent;
 
   TSharedPtr<SWindow> SlateWindow =
