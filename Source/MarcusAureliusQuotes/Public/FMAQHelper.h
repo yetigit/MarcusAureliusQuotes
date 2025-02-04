@@ -43,6 +43,8 @@ private:
 
   void SetDefaults();
   void OnWorldTickStart(UWorld*, ELevelTick TickType, float DeltaTime);
+  void TextureToBrush(const FString & _Path);
+  void DestroyBrush();
 
 private:
   FDelegateHandle MakeWindowTicker_;
@@ -54,6 +56,7 @@ private:
   TWeakPtr<class SMAQuoteWidget> WindowContentWP;
   FTimerHandle AutoHideTimerHandle;
 
+
 public:
   unsigned NumQuotes_;
   float QuoteTick_;
@@ -61,6 +64,7 @@ public:
   FVector2D DefaultWindowPos_;
   bool bDefaultWindowPosSet_;
 private:
+  TSharedPtr<FSlateBrush> CachedAuthorImgBrush;
   bool bQuoteFetched_;
   bool bWindowWasEverCreated_;
 };

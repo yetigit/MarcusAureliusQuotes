@@ -5,7 +5,7 @@
 
 /*
  * TODO:
- * [] a picture of the author should appear with the quote and his name
+ * [x] a picture of the author should appear with the quote and his name
  */
 
 #include "MarcusAureliusQuotesLog.h"

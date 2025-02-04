@@ -11,8 +11,11 @@
 #include "SMAQuoteWidget.h"
 
 #include "TimerManager.h"
-
 #include "HAL/PlatformApplicationMisc.h"
+#include "Interfaces/IPluginManager.h"
+#include "Misc/FileHelper.h"
+#include "IImageWrapperModule.h"
+#include "IImageWrapper.h"
 
 #include "MarcusAureliusQuotesLog.h"
 
@@ -53,6 +56,7 @@ void FMAQHelper::FreeResources() {
   if (GEditor) {
     GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
   }
+  DestroyBrush();
   KillWindow();
   QuotesReset();
   if (GEngine) {
@@ -69,6 +73,21 @@ void FMAQHelper::KillWindow() {
       WindowContent.Reset();
     }
   }
+}
+void FMAQHelper::DestroyBrush(){
+
+  if (CachedAuthorImgBrush.IsValid()) {
+    if (GEngine) {
+      UTexture2D *BrushTexture =
+          Cast<UTexture2D>(CachedAuthorImgBrush->GetResourceObject());
+      if (BrushTexture) {
+        BrushTexture->MarkAsGarbage();
+      }
+      // CachedAuthorImgBrush->SetResourceObject(nullptr);
+    }
+    CachedAuthorImgBrush.Reset();
+  }
+
 }
 
 void FMAQHelper::OnWorldTickStart(UWorld*, ELevelTick TickType, float DeltaTime)
@@ -126,7 +145,7 @@ void FMAQHelper::CreateSlateWindow() {
          TEXT("app scale = %f, dpi scale = %f"), AppScale, DpiScaleFactor);
 #endif
 
-  FVector2D DefaultScreenSize(530.f * AppScale, 600.f * AppScale);
+  FVector2D DefaultScreenSize(( 530.f + 60. ) * AppScale, 600.f * AppScale);
 
   TSharedPtr<SMAQuoteWidget> WindowContent =
       SNew(SMAQuoteWidget).DefaultWScreenSize(DefaultScreenSize);
@@ -209,6 +228,68 @@ bool FMAQHelper::CanDisplayQuote() {
   return SlateWindow.IsValid() && SlateWindow->GetVisibility().IsVisible();
 }
 
+void FMAQHelper::TextureToBrush(const FString &_Path) {
+
+  // cached
+  if (CachedAuthorImgBrush.IsValid())
+    return;
+
+  TArray<uint8> RawFileData;
+  if (!FFileHelper::LoadFileToArray(RawFileData, *_Path)) {
+    UE_LOG(LogMarcusAureliusQuotes, Error,
+           TEXT("Failed to load image file: %s"), *_Path);
+    return;
+  }
+
+  IImageWrapperModule &ImageWrapperModule =
+      FModuleManager::LoadModuleChecked<IImageWrapperModule>(
+          FName("ImageWrapper"));
+
+  TSharedPtr<IImageWrapper> ImageWrapper =
+      ImageWrapperModule.CreateImageWrapper(EImageFormat::PNG);
+
+  if (!ImageWrapper.IsValid() ||
+      !ImageWrapper->SetCompressed(RawFileData.GetData(),
+                                   sizeof(uint8) * RawFileData.Num())) {
+    UE_LOG(LogMarcusAureliusQuotes, Error, TEXT("Failed to decode image: %s"),
+           *_Path);
+    return;
+  }
+
+  TArray<uint8> RawData;
+  if (ImageWrapper->GetRaw(ERGBFormat::RGBA, 8, RawData)) {
+
+    UTexture2D *AuthorTexture = UTexture2D::CreateTransient(
+        ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_R8G8B8A8);
+
+    if (AuthorTexture) {
+
+      void *TextureData =
+          AuthorTexture->GetPlatformData()->Mips[0].BulkData.Lock(
+              LOCK_READ_WRITE);
+
+      FMemory::Memcpy(TextureData, RawData.GetData(),
+                      sizeof(uint8) * RawData.Num());
+
+      AuthorTexture->GetPlatformData()->Mips[0].BulkData.Unlock();
+
+      AuthorTexture->UpdateResource();
+      CachedAuthorImgBrush = MakeShareable(new FSlateBrush());
+      CachedAuthorImgBrush->SetResourceObject(AuthorTexture);
+      CachedAuthorImgBrush->ImageSize =
+          FVector2D(ImageWrapper->GetWidth(), ImageWrapper->GetHeight());
+      CachedAuthorImgBrush->DrawAs = ESlateBrushDrawType::Image;
+      CachedAuthorImgBrush->Tiling = ESlateBrushTileType::NoTile;
+    }
+
+  } else {
+
+    UE_LOG(LogMarcusAureliusQuotes, Error,
+           TEXT("Failed to get raw image data: %s"), *_Path);
+    return;
+  }
+}
+
 void FMAQHelper::DisplayQuote() {
 
   if (bQuoteFetched_ && Quotes.Num() && CanDisplayQuote()) {
@@ -220,6 +301,25 @@ void FMAQHelper::DisplayQuote() {
     FString AuthorPretty = 
         FString::Format(TEXT("{0} {1}"), {TEXT("──"), *Quote.author});
 
+    auto PluginO = IPluginManager::Get().FindPlugin(TEXT("MarcusAureliusQuotes"));
+	FString AuthorImagePath = FPaths::ConvertRelativePathToFull(FPaths::Combine(
+        PluginO->GetBaseDir(),
+        TEXT("Resources"), 
+        TEXT("stoics"), 
+         TEXT("marcus-aurelius64.png")
+       ));
+
+    // UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Author Img Path : %s"), *AuthorImagePath);
+
+    TextureToBrush(AuthorImagePath);
+
+    if (CachedAuthorImgBrush.IsValid())
+    {
+        WindowContent->SetAuthorImg(CachedAuthorImgBrush.Get());
+    }
+    else { 
+        UE_LOG(LogMarcusAureliusQuotes, Error, TEXT("No valid brush for author img"));
+    }
     UpdateWindowQuote(Quote.quote, AuthorPretty);
     UpdateWindowSize();
     if (SlateWindow.IsValid()) {

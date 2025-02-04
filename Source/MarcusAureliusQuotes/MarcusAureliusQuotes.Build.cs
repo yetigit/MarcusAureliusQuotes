@@ -25,13 +25,6 @@ public class MarcusAureliusQuotes : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-"ApplicationCore",
-        "Core",
-        "CoreUObject",
-        "Engine",
-        "HTTP",
-        "Json",
-        "JsonUtilities"
 			}
 			);
 			
@@ -39,10 +32,19 @@ public class MarcusAureliusQuotes : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
+
+        "ApplicationCore",
+        "Core",
+        "CoreUObject",
+        "Engine",
+        "HTTP",
+        "Json",
+        "JsonUtilities",
         "UnrealEd",
         "LevelEditor",
         "Slate",
-        "SlateCore"
+        "SlateCore", 
+		"Projects",
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);
