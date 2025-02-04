@@ -21,8 +21,8 @@
 
 #if 0
 
-// TODO: make it so that the plugin only compiles on windows
-// NOTE: this plugin only compiles for windows
+// maybe make it so that the plugin only compiles on windows
+// if we use this it's only for windows
 #define _AMD64_
 #define WIN32_LEAN_AND_MEAN
 #include <windef.h>
@@ -77,17 +77,15 @@ void FMAQHelper::KillWindow() {
 void FMAQHelper::DestroyBrush(){
 
   if (CachedAuthorImgBrush.IsValid()) {
-    if (GEngine) {
-      UTexture2D *BrushTexture =
-          Cast<UTexture2D>(CachedAuthorImgBrush->GetResourceObject());
-      if (BrushTexture) {
-        BrushTexture->MarkAsGarbage();
+    if (CachedTexture) {
+      if (!CachedTexture->HasAnyFlags(EObjectFlags::RF_BeginDestroyed)) {
+        CachedTexture->RemoveFromRoot();
       }
-      // CachedAuthorImgBrush->SetResourceObject(nullptr);
+      CachedTexture = nullptr;
+      CachedAuthorImgBrush->SetResourceObject(nullptr);
     }
     CachedAuthorImgBrush.Reset();
   }
-
 }
 
 void FMAQHelper::OnWorldTickStart(UWorld*, ELevelTick TickType, float DeltaTime)
@@ -259,8 +257,13 @@ void FMAQHelper::TextureToBrush(const FString &_Path) {
   TArray<uint8> RawData;
   if (ImageWrapper->GetRaw(ERGBFormat::RGBA, 8, RawData)) {
 
+    // NOTE: a naked transient texture will get killed on save
     UTexture2D *AuthorTexture = UTexture2D::CreateTransient(
         ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_R8G8B8A8);
+
+    AuthorTexture->AddToRoot();
+    CachedTexture = AuthorTexture ;
+    
 
     if (AuthorTexture) {
 
@@ -296,32 +299,39 @@ void FMAQHelper::DisplayQuote() {
 
     auto SlateWindow = SlateWindowWP.Pin();
     auto WindowContent = WindowContentWP.Pin();
-    FMAQuote && Quote = Quotes.Pop(true);
+    FMAQuote &&Quote = Quotes.Pop(true);
 
-    FString AuthorPretty = 
+    FString AuthorPretty =
         FString::Format(TEXT("{0} {1}"), {TEXT("──"), *Quote.author});
 
-    auto PluginO = IPluginManager::Get().FindPlugin(TEXT("MarcusAureliusQuotes"));
-	FString AuthorImagePath = FPaths::ConvertRelativePathToFull(FPaths::Combine(
-        PluginO->GetBaseDir(),
-        TEXT("Resources"), 
-        TEXT("stoics"), 
-         TEXT("marcus-aurelius64.png")
-       ));
+    auto PluginO =
+        IPluginManager::Get().FindPlugin(TEXT("MarcusAureliusQuotes"));
+    FString AuthorImagePath = FPaths::ConvertRelativePathToFull(
+        FPaths::Combine(PluginO->GetBaseDir(), TEXT("Resources"),
+                        TEXT("stoics"), TEXT("marcus-aurelius64.png")));
 
-    // UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Author Img Path : %s"), *AuthorImagePath);
+    // UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Author Img Path : %s"),
+    // *AuthorImagePath);
 
-    TextureToBrush(AuthorImagePath);
-
-    if (CachedAuthorImgBrush.IsValid())
-    {
-        WindowContent->SetAuthorImg(CachedAuthorImgBrush.Get());
+    // TextureToBrush(AuthorImagePath);
+    if (!CachedTexture ||
+        CachedTexture->HasAnyFlags(EObjectFlags::RF_BeginDestroyed) ||
+        !CachedAuthorImgBrush.IsValid()) {
+      // NOTE: what about the previous fslatebrush raw pointer given ?
+      CachedAuthorImgBrush.Reset();
+      TextureToBrush(AuthorImagePath);
     }
-    else { 
-        UE_LOG(LogMarcusAureliusQuotes, Error, TEXT("No valid brush for author img"));
+
+    if (CachedAuthorImgBrush.IsValid()) {
+      WindowContent->SetAuthorImg(CachedAuthorImgBrush.Get());
+    } else {
+      UE_LOG(LogMarcusAureliusQuotes, Error,
+             TEXT("No valid brush for author img"));
     }
+
     UpdateWindowQuote(Quote.quote, AuthorPretty);
     UpdateWindowSize();
+
     if (SlateWindow.IsValid()) {
 
       SlateWindow->ShowWindow();

@@ -65,6 +65,7 @@ public:
   bool bDefaultWindowPosSet_;
 private:
   TSharedPtr<FSlateBrush> CachedAuthorImgBrush;
+  TObjectPtr<UTexture2D> CachedTexture;
   bool bQuoteFetched_;
   bool bWindowWasEverCreated_;
 };
