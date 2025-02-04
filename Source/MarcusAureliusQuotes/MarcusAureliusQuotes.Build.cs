@@ -32,7 +32,7 @@ public class MarcusAureliusQuotes : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-
+				// ... add private dependencies that you statically link with here ...	
         "ApplicationCore",
         "Core",
         "CoreUObject",
@@ -44,8 +44,7 @@ public class MarcusAureliusQuotes : ModuleRules
         "LevelEditor",
         "Slate",
         "SlateCore", 
-		"Projects",
-				// ... add private dependencies that you statically link with here ...	
+        "Projects",
 			}
 			);
 		
