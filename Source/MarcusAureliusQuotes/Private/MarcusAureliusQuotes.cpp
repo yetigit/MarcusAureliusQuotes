@@ -6,8 +6,8 @@
 /*
  * TODO:
  * [x] a picture of the author should appear with the quote and his name
+ * [x] try loading the plugin on default loading phase
  * [] add brushes for seneca and epictetus
- * [] try loading the plugin on default loading phase
  * [] Attempt to change the plugin name
  */
 
