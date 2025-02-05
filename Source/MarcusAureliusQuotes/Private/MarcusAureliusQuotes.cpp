@@ -6,7 +6,7 @@
 /*
  * TODO:
  * [x] Attempt to change the plugin name
- * [] Implement display of quote based on probability per minute
+ * [x] Implement display of quote based on probability per minute
  */
 
 #include "MarcusAureliusQuotesLog.h"
@@ -29,6 +29,10 @@ void FMarcusAureliusQuotesModule::StartupModule() {
   }
 
   
+  const float QuoteTick = 60.f;
+  QuoteManager_->DisplayProbability = 1/4.f;
+  QuoteManager_->QuoteTick_ = QuoteTick;
+  QuoteManager_->WindowLifetime_ = QuoteTick * 0.5f;
   QuoteManager_->InitQuoteTickers();
 
 }

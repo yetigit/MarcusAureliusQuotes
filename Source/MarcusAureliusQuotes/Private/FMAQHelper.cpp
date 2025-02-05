@@ -44,6 +44,7 @@ void FMAQHelper::SetDefaults() {
   NumQuotes_ = 99;
   QuoteTick_ = 9.f;
   WindowLifetime_ = QuoteTick_ * 0.7f;
+  DisplayProbability = 1/3.f;
   DefaultWindowPos_ = FVector2D::ZeroVector;
   InitVpSize_ = FVector2D(1000, 1000);
   bDefaultWindowPosSet_ = false;
@@ -466,6 +467,11 @@ void FMAQHelper::InitQuoteTickers() {
       FTickerDelegate::CreateSP(AsShared(), &FMAQHelper::Tick), QuoteTick_);
 }
 
+bool FMAQHelper::DoDisplay()
+{
+  // NOTE: this is equivalent to bernouilli's apparently
+  return FMath::FRand() <= FMath::Clamp(DisplayProbability, 0.0f, 1.0f);
+}
 bool FMAQHelper::Tick(float DeltaTime) {
 
 
@@ -484,13 +490,17 @@ bool FMAQHelper::Tick(float DeltaTime) {
     CreateSlateWindow();
   }
 
-  if (GEngine) {
-    if (CanDisplayQuote()) {
-      if (!bQuoteFetched_ && !FetchQuotes()) {
-        UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Failed attempt to fetch quotes"));
-        return true;
+  if (GEngine && GEditor) {
+
+    if (DoDisplay()) {
+      if (CanDisplayQuote()) {
+        if (!bQuoteFetched_ && !FetchQuotes()) {
+          UE_LOG(LogMarcusAureliusQuotes, Warning,
+                 TEXT("Failed attempt to fetch quotes"));
+          return true;
+        }
+        DisplayQuote();
       }
-      DisplayQuote();
     }
   }
   return true;

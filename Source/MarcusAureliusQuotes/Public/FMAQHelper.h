@@ -52,6 +52,8 @@ private:
 
   void DestroyAllBrushes();
   void DestroyBrush(TSharedPtr<FSlateBrush> &);
+  // condition for the quote to display
+  bool DoDisplay();
 
 private:
 
@@ -71,6 +73,7 @@ public:
   unsigned NumQuotes_;
   float QuoteTick_;
   float WindowLifetime_;
+  float DisplayProbability;
 private:
   FVector2D DefaultWindowPos_;
   FVector2D InitVpSize_;
