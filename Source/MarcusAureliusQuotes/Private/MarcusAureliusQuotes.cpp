@@ -5,10 +5,8 @@
 
 /*
  * TODO:
- * [x] a picture of the author should appear with the quote and his name
- * [x] try loading the plugin on default loading phase
- * [] add brushes for seneca and epictetus
- * [] Attempt to change the plugin name
+ * [x] Attempt to change the plugin name
+ * [] Implement display of quote based on probability per minute
  */
 
 #include "MarcusAureliusQuotesLog.h"
