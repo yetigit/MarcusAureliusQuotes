@@ -57,7 +57,7 @@ void FMAQHelper::FreeResources() {
   if (GEditor) {
     GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
   }
-  DestroyBrush();
+  DestroyAllBrushes();
   KillWindow();
   QuotesReset();
   if (GEngine) {
@@ -75,14 +75,59 @@ void FMAQHelper::KillWindow() {
     }
   }
 }
-void FMAQHelper::DestroyBrush(){
+
+bool FMAQHelper::CheckAllBrushes() {
+
+  // NOTE: if just one texture is invalid, invalidate everything
+  // because we destroy
+  bool DoInvalidation = false;
+  for (auto &Pair : CachedBrushes_) {
+    if (!BrushCheck(Pair.Value)) {
+      DoInvalidation = true;
+      break;
+    }
+  }
+
+  if (DoInvalidation) {
+    for (auto &CachedTexture : CachedTextures_)
+      CachedTexture = nullptr;
+    CachedTextures_.Empty();
+    for (auto &Pair : CachedBrushes_)
+      Pair.Value.Reset();
+  }
+  return DoInvalidation;
+}
+
+void FMAQHelper::DestroyAllBrushes(){
+
+  for (auto & Pair : CachedBrushes_) {
+    DestroyBrush(Pair.Value);
+  }
+  for (auto& TextureObject : CachedTextures_)
+  {
+    TextureObject = nullptr;
+  }
+  CachedTextures_.Empty();
+}
+bool FMAQHelper::BrushCheck(TSharedPtr<FSlateBrush> &CachedAuthorImgBrush) {
+  if (!CachedAuthorImgBrush.IsValid())
+    return false;
+  UTexture2D *CachedTexture =
+      Cast<UTexture2D>(CachedAuthorImgBrush->GetResourceObject());
+
+  if (!CachedTexture)
+    return false;
+
+  return !CachedTexture->HasAnyFlags(EObjectFlags::RF_BeginDestroyed);
+}
+void FMAQHelper::DestroyBrush(TSharedPtr<FSlateBrush>& CachedAuthorImgBrush){
 
   if (CachedAuthorImgBrush.IsValid()) {
-    if (CachedTexture) {
+    if (UTexture2D* CachedTexture = Cast<UTexture2D>(CachedAuthorImgBrush->GetResourceObject())) {
       if (!CachedTexture->HasAnyFlags(EObjectFlags::RF_BeginDestroyed)) {
         CachedTexture->RemoveFromRoot();
       }
-      CachedTexture = nullptr;
+      // CachedTexture = nullptr;
       CachedAuthorImgBrush->SetResourceObject(nullptr);
     }
     CachedAuthorImgBrush.Reset();
@@ -130,6 +175,7 @@ void FMAQHelper::InitQuoteWindow(TSharedPtr<ILevelEditor> InLevelEditor) {
     DefaultWindowPos_ = Result;
     InitVpSize_ = GeoSize;
     bDefaultWindowPosSet_ = true;
+    LoadAllAvatars();
     CreateSlateWindow();
   }
 }
@@ -237,7 +283,36 @@ bool FMAQHelper::CanDisplayQuote() {
   return SlateWindow.IsValid() && SlateWindow->GetVisibility().IsVisible();
 }
 
-void FMAQHelper::TextureToBrush(const FString &_Path) {
+// TODO: call before first window creation
+void FMAQHelper::LoadAllAvatars() {
+
+    TArray<TPair<FString, FName>> Avatars =
+    { {"socrates64.png", "Any"},
+      {"epictetus64.png", "Epictetus"},
+      {"seneca64.png", "Seneca"},
+      {"marcus-aurelius64.png", "Marcus Aurelius"},
+    };
+
+  const FString BaseDir = IPluginManager::Get()
+                              .FindPlugin(TEXT("MarcusAureliusQuotes"))
+                              ->GetBaseDir();
+
+  const FString AvatarDir = FPaths::ConvertRelativePathToFull(
+      FPaths::Combine(BaseDir, TEXT("Resources"), TEXT("stoics")));
+
+  for (const auto &Pair : Avatars) {
+
+    const FString AuthorImagePath = FPaths::Combine(AvatarDir, Pair.Key);
+
+    // NOTE: this function is supposed to be called as initialization step
+    // if key exist, take the brush and destroy it
+    TSharedPtr<FSlateBrush> &CachedBrush =
+        CachedBrushes_.Add(Pair.Value, {});
+    TextureToBrush(AuthorImagePath, CachedBrush);
+  }
+}
+
+void FMAQHelper::TextureToBrush(const FString &_Path, TSharedPtr<FSlateBrush> & CachedAuthorImgBrush) {
 
   // cached
   if (CachedAuthorImgBrush.IsValid())
@@ -273,7 +348,8 @@ void FMAQHelper::TextureToBrush(const FString &_Path) {
         ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_R8G8B8A8);
 
     AuthorTexture->AddToRoot();
-    CachedTexture = AuthorTexture ;
+    // CachedTexture = AuthorTexture ;
+    CachedTextures_.Emplace(AuthorTexture);
     
 
     if (AuthorTexture) {
@@ -315,29 +391,29 @@ void FMAQHelper::DisplayQuote() {
     FString AuthorPretty =
         FString::Format(TEXT("{0} {1}"), {TEXT("──"), *Quote.author});
 
-    auto PluginO =
-        IPluginManager::Get().FindPlugin(TEXT("MarcusAureliusQuotes"));
-    FString AuthorImagePath = FPaths::ConvertRelativePathToFull(
-        FPaths::Combine(PluginO->GetBaseDir(), TEXT("Resources"),
-                        TEXT("stoics"), TEXT("marcus-aurelius64.png")));
+    if (CheckAllBrushes()) {
 
-    // UE_LOG(LogMarcusAureliusQuotes, Warning, TEXT("Author Img Path : %s"),
-    // *AuthorImagePath);
-
-    // TextureToBrush(AuthorImagePath);
-    if (!CachedTexture ||
-        CachedTexture->HasAnyFlags(EObjectFlags::RF_BeginDestroyed) ||
-        !CachedAuthorImgBrush.IsValid()) {
-      // NOTE: what about the previous fslatebrush raw pointer given ?
-      CachedAuthorImgBrush.Reset();
-      TextureToBrush(AuthorImagePath);
+      // NOTE: invalid now, reload
+      UE_LOG(LogMarcusAureliusQuotes, Error, TEXT("cache is invalid, building again"));
+      LoadAllAvatars();
     }
 
-    if (CachedAuthorImgBrush.IsValid()) {
-      WindowContent->SetAuthorImg(CachedAuthorImgBrush.Get());
+    auto CachedAuthorBrushPtr = CachedBrushes_.Find(FName(Quote.author));
+
+    // NOTE: fallback to some image
+    if (!CachedAuthorBrushPtr)
+      CachedAuthorBrushPtr = CachedBrushes_.Find(FName("Any"));
+
+    if (CachedAuthorBrushPtr) {
+      if ((*CachedAuthorBrushPtr).IsValid()) {
+        WindowContent->SetAuthorImg((*CachedAuthorBrushPtr).Get());
+      } else {
+
+        UE_LOG(LogMarcusAureliusQuotes, Error,
+               TEXT("No valid brush for author %s"), *Quote.author);
+      }
     } else {
-      UE_LOG(LogMarcusAureliusQuotes, Error,
-             TEXT("No valid brush for author img"));
+      UE_LOG(LogMarcusAureliusQuotes, Error, TEXT("No avatar found"));
     }
 
     UpdateWindowQuote(Quote.quote, AuthorPretty);

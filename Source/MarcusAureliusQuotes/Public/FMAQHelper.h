@@ -42,27 +42,36 @@ private:
   void KillWindow();
 
   void SetDefaults();
-  void OnWorldTickStart(UWorld*, ELevelTick TickType, float DeltaTime);
-  void TextureToBrush(const FString & _Path);
-  void DestroyBrush();
+  void OnWorldTickStart(UWorld *, ELevelTick TickType, float DeltaTime);
+
+  void LoadAllAvatars();
+  void TextureToBrush(const FString &_Path, TSharedPtr<FSlateBrush> &);
+
+  bool CheckAllBrushes();
+  bool BrushCheck(TSharedPtr<FSlateBrush> &);
+
+  void DestroyAllBrushes();
+  void DestroyBrush(TSharedPtr<FSlateBrush> &);
 
 private:
+
+  TMap<FName, TSharedPtr<FSlateBrush>> CachedBrushes_;
+  TArray<TObjectPtr<UTexture2D>> CachedTextures_;
+
+  TArray<FMAQuote> Quotes;
+
   FDelegateHandle MakeWindowTicker_;
   FTSTicker::FDelegateHandle QuoteTicker_;
-  TArray<FMAQuote> Quotes;
 
   TWeakPtr<SWindow> SlateWindowWP;
   TWeakPtr<class SMAQuoteWidget> WindowContentWP;
   FTimerHandle AutoHideTimerHandle;
-
 
 public:
   unsigned NumQuotes_;
   float QuoteTick_;
   float WindowLifetime_;
 private:
-  TSharedPtr<FSlateBrush> CachedAuthorImgBrush;
-  TObjectPtr<UTexture2D> CachedTexture;
   FVector2D DefaultWindowPos_;
   FVector2D InitVpSize_;
   bool bDefaultWindowPosSet_;
