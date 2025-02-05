@@ -284,7 +284,6 @@ bool FMAQHelper::CanDisplayQuote() {
   return SlateWindow.IsValid() && SlateWindow->GetVisibility().IsVisible();
 }
 
-// TODO: call before first window creation
 void FMAQHelper::LoadAllAvatars() {
 
     TArray<TPair<FString, FName>> Avatars =

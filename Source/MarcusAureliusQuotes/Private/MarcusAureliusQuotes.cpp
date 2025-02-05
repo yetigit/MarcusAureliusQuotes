@@ -5,8 +5,6 @@
 
 /*
  * TODO:
- * [x] Attempt to change the plugin name
- * [x] Implement display of quote based on probability per minute
  */
 
 #include "MarcusAureliusQuotesLog.h"
@@ -17,6 +15,8 @@ void FMarcusAureliusQuotesModule::StartupModule() {
   // This code will execute after your module is loaded into memory; the exact
   // timing is specified in the .uplugin file per-module
 
+
+  LogMarcusAureliusQuotes.SetVerbosity(ELogVerbosity::Error);
   QuoteManager_ = MakeShared<FMAQHelper>();
 
   QuoteManager_->QuotesReset();
