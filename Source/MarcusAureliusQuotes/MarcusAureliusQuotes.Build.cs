@@ -45,6 +45,8 @@ public class MarcusAureliusQuotes : ModuleRules
         "Slate",
         "SlateCore", 
         "Projects",
+        "DeveloperSettings",
+        "Settings",
 			}
 			);
 		

@@ -80,4 +80,6 @@ private:
   bool bDefaultWindowPosSet_;
   bool bQuoteFetched_;
   bool bWindowWasEverCreated_;
+
+  double ReqStartTime;
 };

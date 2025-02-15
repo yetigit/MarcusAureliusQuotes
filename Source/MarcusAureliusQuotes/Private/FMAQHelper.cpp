@@ -41,6 +41,7 @@ FMAQHelper::FMAQHelper() {
 }
 
 void FMAQHelper::SetDefaults() {
+  ReqStartTime = 0.0; 
   NumQuotes_ = 99;
   QuoteTick_ = 9.f;
   WindowLifetime_ = QuoteTick_ * 0.7f;
@@ -195,7 +196,7 @@ void FMAQHelper::CreateSlateWindow() {
   // NOTE:
   // - window size ratio is 3/4
   // - based on tests we want the X value to occupy about 1/4 of the VP size X
-  const float InitWinSizeX = FMath::Max(200.f, float(InitVpSize_.X) * 0.24f * AppScale);
+  const float InitWinSizeX = FMath::Max(200.f, float(InitVpSize_.X) * 0.3f * AppScale);
   const float InitWinSizeY = InitWinSizeX / 0.75f;
   const FVector2D DefaultScreenSize = FVector2D(InitWinSizeX, InitWinSizeY);
   const float DefaultAuthorImgRes = 64.f * AppScale;
@@ -535,6 +536,7 @@ void FMAQHelper::SetRequestTimeout(const float _HowLong) {
 
 bool FMAQHelper::FetchQuotes() {
   // int NumberOfQuotes = NumQuotes_;
+  ReqStartTime = FPlatformTime::Seconds();
   FString Url = TEXT("https://stoic-quotes.com/api/quotes?num=");
   Url += FString::FromInt(NumQuotes_);
 
@@ -547,13 +549,18 @@ bool FMAQHelper::FetchQuotes() {
   Request->OnProcessRequestComplete().BindThreadSafeSP(this,
                                              &FMAQHelper::OnResponseReceived);
 
-  return Request->ProcessRequest();
+  bool bWasSuccessful = Request->ProcessRequest();
+  return bWasSuccessful;
 }
 
 void FMAQHelper::OnResponseReceived(FHttpRequestPtr Request,
                                     FHttpResponsePtr Response,
                                     bool bWasSuccessful) {
 
+  LogMarcusAureliusQuotes.SetVerbosity(ELogVerbosity::Log);
+  const double ReqEnd = FPlatformTime::Seconds();
+  UE_LOG(LogMarcusAureliusQuotes, Log, TEXT("%d Quotes fetch request time: %.2f (s)"), NumQuotes_, ReqEnd-ReqStartTime);
+  LogMarcusAureliusQuotes.SetVerbosity(ELogVerbosity::Error);
   QuotesReset();
 
   auto OnError = [](const FString &InError) {
