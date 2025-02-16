@@ -1,7 +1,11 @@
-# Stoic Quotes
+# Stoic Quotes 
+
+### Overview
+
+this plugin displays bite size *wisdoms* of the stoics while you make a level in the Unreal Editor.
 ## Install 
 
-- You can install following Fab instructions
+- You can install following **Fab** instructions
 
 ### Manual Install 
 - Place the folder under the `Plugins` directory of your project.
@@ -9,8 +13,8 @@
 ## How to use 
 
 - Install the plugin
-- Load the plugin
-- Have fun ! You can also adjust the settings in the project settings by searching for "quote"
+- Load the plugin *" **Stoic Quotes** "*
+- Have fun ! You can also adjust the settings in the project settings by searching for `quote`
 
 ## Settings 
 
