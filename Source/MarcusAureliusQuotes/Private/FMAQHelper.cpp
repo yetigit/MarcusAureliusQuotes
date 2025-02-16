@@ -17,6 +17,9 @@
 #include "IImageWrapperModule.h"
 #include "IImageWrapper.h"
 
+#include "MAQSettings.h"
+#include "ISettingsModule.h"
+
 #include "MarcusAureliusQuotesLog.h"
 
 #if 0
@@ -41,6 +44,8 @@ FMAQHelper::FMAQHelper() {
 }
 
 void FMAQHelper::SetDefaults() {
+  bActive = true;
+  bInGame = false;
   ReqStartTime = 0.0; 
   NumQuotes_ = 99;
   QuoteTick_ = 9.f;
@@ -58,6 +63,7 @@ FMAQHelper::~FMAQHelper() { this->FreeResources(); }
 void FMAQHelper::FreeResources() {
   if (GEditor) {
     GEditor->GetTimerManager()->ClearTimer(AutoHideTimerHandle);
+    GEditor->GetTimerManager()->ClearTimer(SettingsUpdateTimerHandle);
   }
   DestroyAllBrushes();
   KillWindow();
@@ -138,7 +144,7 @@ void FMAQHelper::DestroyBrush(TSharedPtr<FSlateBrush>& CachedAuthorImgBrush){
 
 void FMAQHelper::OnWorldTickStart(UWorld*, ELevelTick TickType, float DeltaTime)
 {
-  if (GEditor && !GEditor->PlayWorld)
+  if (GEditor)
   {
     if(!bWindowWasEverCreated_)
     {
@@ -280,7 +286,10 @@ void FMAQHelper::UpdateWindowQuote(const FString &_Quote,
 }
 
 bool FMAQHelper::CanDisplayQuote() {
-
+  if (!bActive)
+    return false;
+  if (!bInGame && (GEditor && GEditor->PlayWorld))
+    return false;
   auto SlateWindow = SlateWindowWP.Pin();
   return SlateWindow.IsValid() && SlateWindow->GetVisibility().IsVisible();
 }
@@ -458,7 +467,49 @@ void FMAQHelper::DisplayQuote() {
   }
 }
 
+void FMAQHelper::OnSettingsChanged(FName PropertyName) {
+  const UMAQSettings *Settings = GetDefault<UMAQSettings>();
+  check(Settings);
+  if (!GEditor)
+    return;
+
+  // Update the relevant parts based on which setting changed
+  if (PropertyName != GET_MEMBER_NAME_CHECKED(UMAQSettings, DisplayInterval)) {
+
+    DisplayProbability = Settings->DisplayProbability / 100.f;
+    bActive = Settings->bActive;
+    bInGame = Settings->bInGame;
+
+  } else if (PropertyName ==
+             GET_MEMBER_NAME_CHECKED(UMAQSettings, DisplayInterval)) {
+
+    GEditor->GetTimerManager()->ClearTimer(SettingsUpdateTimerHandle);
+    GEditor->GetTimerManager()->SetTimer(
+        SettingsUpdateTimerHandle,
+        [this, Settings]() {
+          LogMarcusAureliusQuotes.SetVerbosity(ELogVerbosity::Log);
+          const float NewQuoteTick = Settings->DisplayInterval * 60.f;
+          if (!FMath::IsNearlyEqual(QuoteTick_, NewQuoteTick, 0.001f)) {
+            QuoteTick_ = NewQuoteTick;
+
+            if (GEngine && QuoteTicker_.IsValid()) {
+              FTSTicker::GetCoreTicker().RemoveTicker(QuoteTicker_);
+              QuoteTicker_ = FTSTicker::GetCoreTicker().AddTicker(
+                  FTickerDelegate::CreateSP(AsShared(), &FMAQHelper::Tick),
+                  QuoteTick_);
+              UE_LOG(LogMarcusAureliusQuotes, Log, TEXT("New quote ticker."));
+            }
+          }
+          LogMarcusAureliusQuotes.SetVerbosity(ELogVerbosity::Error);
+        },
+        1.0f, false);
+  }
+}
+
 void FMAQHelper::InitQuoteTickers() {
+
+  GetMutableDefault<UMAQSettings>()->OnSettingsChanged.AddSP(
+        this, &FMAQHelper::OnSettingsChanged);
 
   MakeWindowTicker_ = FWorldDelegates::OnWorldTickStart.AddSP(
       AsShared(), &FMAQHelper::OnWorldTickStart);
@@ -492,8 +543,7 @@ bool FMAQHelper::Tick(float DeltaTime) {
 
   if (GEngine && GEditor) {
 
-    if (DoDisplay()) {
-      if (CanDisplayQuote()) {
+      if (CanDisplayQuote() && DoDisplay()) {
         if (!bQuoteFetched_ && !FetchQuotes()) {
           UE_LOG(LogMarcusAureliusQuotes, Warning,
                  TEXT("Failed attempt to fetch quotes"));
@@ -501,7 +551,6 @@ bool FMAQHelper::Tick(float DeltaTime) {
         }
         DisplayQuote();
       }
-    }
   }
   return true;
 }

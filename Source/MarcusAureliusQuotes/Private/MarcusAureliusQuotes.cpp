@@ -40,6 +40,8 @@ void FMarcusAureliusQuotesModule::StartupModule() {
   const UMAQSettings* Settings = GetDefault<UMAQSettings>  () ; 
   check(Settings);
   QuoteManager_->DisplayProbability = Settings->DisplayProbability / 100.f ;
+  QuoteManager_->bActive = Settings->bActive  ;
+  QuoteManager_->bInGame = Settings->bInGame  ;
 
   // display interval is in minute
   const float QuoteTick = Settings->DisplayInterval * 60.f;

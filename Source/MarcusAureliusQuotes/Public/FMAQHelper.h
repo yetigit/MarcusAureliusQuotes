@@ -24,7 +24,7 @@ public:
   void QuotesReset();
   void InitQuoteTickers();
 
-
+  void OnSettingsChanged(FName PropertyName);
 
 private:
   void CreateSlateWindow();
@@ -74,12 +74,16 @@ public:
   float QuoteTick_;
   float WindowLifetime_;
   float DisplayProbability;
+  double ReqStartTime;
 private:
+  FTimerHandle SettingsUpdateTimerHandle;
   FVector2D DefaultWindowPos_;
   FVector2D InitVpSize_;
   bool bDefaultWindowPosSet_;
   bool bQuoteFetched_;
   bool bWindowWasEverCreated_;
+public:
+  bool bActive;
+  bool bInGame;
 
-  double ReqStartTime;
 };
