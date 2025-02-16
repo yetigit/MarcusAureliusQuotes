@@ -15,4 +15,5 @@
 ## Settings 
 
 **Display Probability** : the probability the quote will be displayed at a set interval.
+
 **Display Interval** :  the time interval at which a quote may be displayed based on probability. 
