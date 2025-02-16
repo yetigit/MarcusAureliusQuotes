@@ -3,7 +3,7 @@
 
 - You can install following Fab instructions
 
-#### Manual Install 
+### Manual Install 
 - Place the folder under the `Plugins` directory of your project.
 - Or place it under the engine path : `Epic Games/UE_[VERSION]/Engine/Plugins/YourPluginName/`
 ## How to use 
