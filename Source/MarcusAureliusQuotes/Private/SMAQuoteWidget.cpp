@@ -6,6 +6,7 @@
 
 #include "MarcusAureliusQuotesLog.h"
 
+// Copyright Baidhir Hidair, 2025. All Rights Reserved.
 void SMAQuoteWidget::Construct(const FArguments& InArgs)
 {
   const FVector2D IntendedScreenSize = InArgs._DefaultWScreenSize;

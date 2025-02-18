@@ -22,6 +22,7 @@
 
 #include "MarcusAureliusQuotesLog.h"
 
+// Copyright Baidhir Hidair, 2025. All Rights Reserved.
 #if 0
 
 // maybe make it so that the plugin only compiles on windows

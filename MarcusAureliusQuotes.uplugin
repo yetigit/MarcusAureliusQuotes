@@ -14,11 +14,18 @@
 	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
-	"Modules": [
+  "EngineVersion": "5.5.0",
+  "FabURL" : "com.epicgames.launcher://ue/Fab/product/7be9f9bc-385d-470e-b638-bc95a212859b",
+  "Modules": [
 		{
 			"Name": "MarcusAureliusQuotes",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
+      "PlatformAllowList": [
+        "Win64",
+        "Mac",
+        "Linux"
+      ]
 		}
 	]
 }

@@ -1,3 +1,4 @@
+// Copyright Baidhir Hidair, 2025. All Rights Reserved.
 #pragma once
 #include "CoreMinimal.h"
 #include "Widgets/SCompoundWidget.h"
