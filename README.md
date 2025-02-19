@@ -14,7 +14,8 @@ This plugin displays bite size *wisdoms* of the stoics while you tinker with the
 
 - Install the plugin
 - Load the plugin *" **Stoic Quotes** "*
-- Have fun ! You can also adjust the settings in the project settings by searching for `quote`
+- Adjust the settings in the project settings by searching for `quote`
+- Have fun! Now a small slate window will pop every once in a while with a stoic quote
 
 ## Settings 
 
