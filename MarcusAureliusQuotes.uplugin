@@ -20,7 +20,7 @@
 		{
 			"Name": "MarcusAureliusQuotes",
 			"Type": "Editor",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
       "PlatformAllowList": [
         "Win64",
         "Mac",

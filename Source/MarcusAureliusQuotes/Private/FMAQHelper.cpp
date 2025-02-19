@@ -1,3 +1,4 @@
+// Copyright Baidhir Hidair, 2025. All Rights Reserved.
 #include "FMAQHelper.h"
 #include "Editor.h"
 #include "Editor/MainFrame/Public/Interfaces/IMainFrameModule.h"
@@ -22,7 +23,6 @@
 
 #include "MarcusAureliusQuotesLog.h"
 
-// Copyright Baidhir Hidair, 2025. All Rights Reserved.
 #if 0
 
 // maybe make it so that the plugin only compiles on windows
