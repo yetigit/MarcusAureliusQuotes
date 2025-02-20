@@ -1,8 +1,7 @@
 # Stoic Quotes 
 
 # Overview
-
-<iframe width="300" height="300" src="https://www.youtube.com/embed/MIx0GV4ToFo" frameborder="0" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+[![Video Title](https://img.youtube.com/vi/MIx0GV4ToFo/0.jpg)](https://www.youtube.com/watch?v=MIx0GV4ToFo)
 
 ## Description
 
