@@ -7,6 +7,10 @@ This plugin displays the Wisdom of the stoics while you tinker with the Unreal E
 
 https://youtu.be/MIx0GV4ToFo?feature=shared
 
+### Compatibility 
+
+Supports UE 5.5+
+
 ### Download
 ## [Check it on FAB](https://www.fab.com/listings/4e9565f4-5f17-4fcb-b447-ae1a0a9c2fff)
 
