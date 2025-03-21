@@ -1,17 +1,14 @@
 # Stoic Quotes 
 
+This plugin displays the Wisdom of the stoics while you tinker with the Unreal Editor.
+
 # Overview
 [![Video Title](https://img.youtube.com/vi/MIx0GV4ToFo/0.jpg)](https://www.youtube.com/watch?v=MIx0GV4ToFo)
 
 https://youtu.be/MIx0GV4ToFo?feature=shared
 
-## Description
-
-This plugin displays bite size *wisdoms* of the stoics while you tinker with the Unreal Editor.
-
-## Download
-
-### [Check it on FAB](https://www.fab.com/listings/4e9565f4-5f17-4fcb-b447-ae1a0a9c2fff)
+### Download
+## [Check it on FAB](https://www.fab.com/listings/4e9565f4-5f17-4fcb-b447-ae1a0a9c2fff)
 
 ## Install 
 
