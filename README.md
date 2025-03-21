@@ -3,6 +3,8 @@
 # Overview
 [![Video Title](https://img.youtube.com/vi/MIx0GV4ToFo/0.jpg)](https://www.youtube.com/watch?v=MIx0GV4ToFo)
 
+https://youtu.be/MIx0GV4ToFo?feature=shared
+
 ## Description
 
 This plugin displays bite size *wisdoms* of the stoics while you tinker with the Unreal Editor.
